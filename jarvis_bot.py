@@ -32,11 +32,14 @@ def load_knowledge_base():
     """Загружает базу знаний из JSON"""
     global KNOWLEDGE_BASE
     try:
-        with open("knowledge_base.json", "r", encoding="utf-8") as f:
+        # Используем абсолютный путь для корректной работы на Railway
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        knowledge_base_path = os.path.join(base_dir, 'knowledge_base.json')
+        with open(knowledge_base_path, "r", encoding="utf-8") as f:
             KNOWLEDGE_BASE = json.load(f)
             print(f"✅ База знаний загружена: {KNOWLEDGE_BASE.get('total_documents', 0)} документов")
-    except FileNotFoundError:
-        print("⚠️  knowledge_base.json не найден. Используем базовый режим.")
+    except FileNotFoundError as e:
+        print(f"⚠️  knowledge_base.json не найден ({e}). Используем базовый режим.")
         KNOWLEDGE_BASE = {"sources": {"discord": [], "txt": [], "notion": []}, "total_documents": 0}
 
 # Функция поиска релевантных материалов
