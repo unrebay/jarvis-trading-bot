@@ -1,0 +1,283 @@
+{
+  "version": "1.0",
+  "created_at": "2026-03-21T18:10:42.286550",
+  "sources": {
+    "discord": [
+      {
+        "filename": "prop-discussion.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/prop-discussion.txt",
+        "size": 3531881,
+        "type": "text",
+        "channel": "prop-discussion"
+      },
+      {
+        "filename": "mindset.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/mindset.txt",
+        "size": 1743011,
+        "type": "text",
+        "channel": "mindset"
+      },
+      {
+        "filename": "indices-eu.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/indices-eu.txt",
+        "size": 1295218,
+        "type": "text",
+        "channel": "indices-eu"
+      },
+      {
+        "filename": "rules.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/rules.txt",
+        "size": 2161,
+        "type": "text",
+        "channel": "rules"
+      },
+      {
+        "filename": "how-to-enroll.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/how-to-enroll.txt",
+        "size": 4647,
+        "type": "text",
+        "channel": "how-to-enroll"
+      },
+      {
+        "filename": "stocks.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/stocks.txt",
+        "size": 21088,
+        "type": "text",
+        "channel": "stocks"
+      },
+      {
+        "filename": "navigation.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/navigation.txt",
+        "size": 4273,
+        "type": "text",
+        "channel": "navigation"
+      },
+      {
+        "filename": "indices-us.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/indices-us.txt",
+        "size": 18977128,
+        "type": "text",
+        "channel": "indices-us"
+      },
+      {
+        "filename": "students-feedback.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/students-feedback.txt",
+        "size": 846979,
+        "type": "text",
+        "channel": "students-feedback"
+      },
+      {
+        "filename": "notifications.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/notifications.txt",
+        "size": 43221,
+        "type": "text",
+        "channel": "notifications"
+      },
+      {
+        "filename": "eur.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/eur.txt",
+        "size": 13719596,
+        "type": "text",
+        "channel": "eur"
+      },
+      {
+        "filename": "intensive-practice.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/server2/intensive-practice.txt",
+        "size": 1923,
+        "type": "text",
+        "channel": "intensive-practice"
+      }
+    ],
+    "notion": [],
+    "txt": [
+      {
+        "filename": "channels2.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/channels2.txt",
+        "size": 3644,
+        "type": "txt",
+        "topic": "channels2"
+      },
+      {
+        "filename": "terminology.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/terminology.txt",
+        "size": 5290,
+        "type": "txt",
+        "topic": "terminology"
+      },
+      {
+        "filename": "work-with-imbalance.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/work-with-imbalance.txt",
+        "size": 3861,
+        "type": "txt",
+        "topic": "work-with-imbalance"
+      },
+      {
+        "filename": "channels.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/channels.txt",
+        "size": 8805,
+        "type": "txt",
+        "topic": "channels"
+      },
+      {
+        "filename": "manipulations.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/manipulations.txt",
+        "size": 3170,
+        "type": "txt",
+        "topic": "manipulations"
+      },
+      {
+        "filename": "backtest.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/backtest.txt",
+        "size": 3813,
+        "type": "txt",
+        "topic": "backtest"
+      },
+      {
+        "filename": "homework.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/homework.txt",
+        "size": 8604,
+        "type": "txt",
+        "topic": "homework"
+      },
+      {
+        "filename": "technical-psychology.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/technical-psychology.txt",
+        "size": 5096,
+        "type": "txt",
+        "topic": "technical-psychology"
+      },
+      {
+        "filename": "inefficiency-types.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/inefficiency-types.txt",
+        "size": 7355,
+        "type": "txt",
+        "topic": "inefficiency-types"
+      },
+      {
+        "filename": "timings.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/timings.txt",
+        "size": 1985,
+        "type": "txt",
+        "topic": "timings"
+      },
+      {
+        "filename": "sessions.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/sessions.txt",
+        "size": 11351,
+        "type": "txt",
+        "topic": "sessions"
+      },
+      {
+        "filename": "order-flow-analysis.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/order-flow-analysis.txt",
+        "size": 2410,
+        "type": "txt",
+        "topic": "order-flow-analysis"
+      },
+      {
+        "filename": "block-types.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/block-types.txt",
+        "size": 11653,
+        "type": "txt",
+        "topic": "block-types"
+      },
+      {
+        "filename": "emotions.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/emotions.txt",
+        "size": 5028,
+        "type": "txt",
+        "topic": "emotions"
+      },
+      {
+        "filename": "structure-and-liquidity.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/structure-and-liquidity.txt",
+        "size": 6702,
+        "type": "txt",
+        "topic": "structure-and-liquidity"
+      },
+      {
+        "filename": "discipline.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/discipline.txt",
+        "size": 4399,
+        "type": "txt",
+        "topic": "discipline"
+      },
+      {
+        "filename": "tda-and-entry-models.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/tda-and-entry-models.txt",
+        "size": 6487,
+        "type": "txt",
+        "topic": "tda-and-entry-models"
+      },
+      {
+        "filename": "first-steps.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/first-steps.txt",
+        "size": 1486,
+        "type": "txt",
+        "topic": "first-steps"
+      },
+      {
+        "filename": "advanced-market-analysis.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/advanced-market-analysis.txt",
+        "size": 8455,
+        "type": "txt",
+        "topic": "advanced-market-analysis"
+      },
+      {
+        "filename": "risk-management.txt",
+        "path": "/sessions/tender-wizardly-gauss/mnt/trading-theory/risk-management.txt",
+        "size": 3268,
+        "type": "txt",
+        "topic": "risk-management"
+      }
+    ],
+    "videos": []
+  },
+  "total_documents": 32,
+  "schedule": {
+    "events": [
+      {
+        "id": 1,
+        "title": "A to B Concept. Bellissimo",
+        "date": "2026-03-21",
+        "time": "21:00",
+        "instructor": "Bellissimo"
+      },
+      {
+        "id": 2,
+        "title": "30m Context Flow. Sooloogoonee",
+        "date": "2026-03-23",
+        "time": "21:00",
+        "instructor": "Sooloogoonee"
+      },
+      {
+        "id": 3,
+        "title": "Trading Strategy Blueprint. Bellissimo",
+        "date": "2026-03-25",
+        "time": "21:00",
+        "instructor": "Bellissimo"
+      },
+      {
+        "id": 4,
+        "title": "Auction Market Theory. Aress",
+        "date": "2026-03-27",
+        "time": "21:00",
+        "instructor": "Aress"
+      },
+      {
+        "id": 5,
+        "title": "Swing Macro Analysis. PashaTrltsk",
+        "date": "2026-03-29",
+        "time": "20:00",
+        "instructor": "PashaTrltsk"
+      },
+      {
+        "id": 6,
+        "title": "Practical session. Yura Pukaliak",
+        "date": "2026-03-31",
+        "time": "20:00",
+        "instructor": "Yura Pukaliak"
+      }
+    ]
+  }
+}
