@@ -1,0 +1,10 @@
+{
+  "events": [
+    {"id": 1, "title": "A to B Concept. Bellissimo", "date": "2026-03-21", "time": "21:00", "instructor": "Bellissimo"},
+    {"id": 2, "title": "30m Context Flow. Sooloogoonee", "date": "2026-03-23", "time": "21:00", "instructor": "Sooloogoonee"},
+    {"id": 3, "title": "Trading Strategy Blueprint. Bellissimo", "date": "2026-03-25", "time": "21:00", "instructor": "Bellissimo"},
+    {"id": 4, "title": "Auction Market Theory. Aress", "date": "2026-03-27", "time": "21:00", "instructor": "Aress"},
+    {"id": 5, "title": "Swing Macro Analysis. PashaTrltsk", "date": "2026-03-29", "time": "20:00", "instructor": "PashaTrltsk"},
+    {"id": 6, "title": "Practical session. Yura Pukaliak", "date": "2026-03-31", "time": "20:00", "instructor": "Yura Pukaliak"}
+  ]
+}
