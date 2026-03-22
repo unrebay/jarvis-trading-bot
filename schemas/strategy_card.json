@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trading Strategy Card Schema",
+  "description": "Schema for documenting trading strategies with entry, exit, and confluence rules",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the strategy",
+      "example": "strategy-001-london-breakout"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the trading strategy",
+      "example": "London Open Breakout"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["scalping", "intraday", "swing"],
+      "description": "Strategy timeframe classification",
+      "example": "intraday"
+    },
+    "timeframes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Recommended timeframes for this strategy",
+      "example": ["15m", "1h"]
+    },
+    "entry_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Conditions that must be met for entry",
+      "example": [
+        "Price breaks above Asian high within first 30 mins of London open",
+        "Volume above 20-day average",
+        "RSI > 60 (momentum confirmation)",
+        "No major economic events in next 2 hours"
+      ]
+    },
+    "exit_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Conditions for exiting the trade",
+      "example": [
+        "Price closes below 15m moving average",
+        "Take profit at daily resistance level",
+        "Time-based: close at 4:00 PM London time",
+        "Stop loss hit"
+      ]
+    },
+    "stop_loss_logic": {
+      "type": "string",
+      "description": "How to determine stop loss placement",
+      "example": "Place stop loss 10 pips below the Asian low or 1% of account risk, whichever is smaller"
+    },
+    "take_profit_logic": {
+      "type": "string",
+      "description": "How to determine take profit levels",
+      "example": "TP1 at recent daily resistance, TP2 at weekly resistance, TP3 trailing stop after TP1 hit"
+    },
+    "risk_reward_ratio": {
+      "type": "number",
+      "description": "Minimum acceptable risk-reward ratio",
+      "example": 1.5,
+      "minimum": 1
+    },
+    "best_sessions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["london", "new_york", "asian"]
+      },
+      "description": "Best trading sessions for this strategy",
+      "example": ["london", "new_york"]
+    },
+    "confluence_factors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Factors that increase setup strength when aligned",
+      "example": [
+        "Daily trend direction matches entry direction",
+        "Multiple timeframe alignment (15m + 1h + 4h all bullish)",
+        "Price near support/resistance that aligns with Fibonacci level",
+        "Volume spike during entry",
+        "Moving averages stacked correctly"
+      ]
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes, warnings, or context",
+      "example": "Avoid this strategy 1 hour before major economic events. Works best on GBP/USD and EUR/GBP. Requires active monitoring."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this strategy was documented",
+      "example": "2026-02-20T11:00:00Z"
+    }
+  },
+  "required": ["id", "name", "type", "timeframes", "entry_conditions", "exit_conditions", "stop_loss_logic", "take_profit_logic", "risk_reward_ratio", "best_sessions", "confluence_factors", "created_at"],
+  "example": {
+    "id": "strategy-002-support-bounce",
+    "name": "Institutional Support Bounce",
+    "type": "swing",
+    "timeframes": ["4h", "daily"],
+    "entry_conditions": [
+      "Price breaks and retests a major support level (horizontal or trendline)",
+      "Retest occurs on reduced volume (smart money absorption)",
+      "Price bounces from support without breaking it",
+      "RSI > 40 (not oversold after bounce)",
+      "Entry on close above support with volume confirmation"
+    ],
+    "exit_conditions": [
+      "Price reaches daily resistance zone",
+      "Close below support level on 4h timeframe",
+      "5-day time limit if no movement toward target"
+    ],
+    "stop_loss_logic": "Place stop loss 10-15 pips below the support level. If account is 10k and risk is 1%, stop loss cannot be more than 10 pips max.",
+    "take_profit_logic": "TP1 at 50% of daily resistance zone, TP2 at full resistance zone, close 50% position at TP1",
+    "risk_reward_ratio": 2,
+    "best_sessions": ["london", "new_york"],
+    "confluence_factors": [
+      "Support level aligns with 0.618 Fibonacci retrace",
+      "Level has been retested 2+ times historically",
+      "Support is on a horizontal S/R, trendline, and moving average simultaneously",
+      "Daily trend is still bullish (higher lows)",
+      "4h volume shows spike on bounce"
+    ],
+    "notes": "This is a mechanical strategy with high win rate but requires patience. Do not chase entries. Wait for price to come to support naturally. Works best in trending markets, avoid in ranging markets.",
+    "created_at": "2026-02-20T14:30:00Z"
+  },
+  "examples": [
+    {
+      "id": "strategy-003-scalp-ma-cross",
+      "name": "15m MA Crossover Scalp",
+      "type": "scalping",
+      "timeframes": ["15m"],
+      "entry_conditions": [
+        "Fast MA (9) crosses above Slow MA (21)",
+        "Volume above 50-period average",
+        "Entry on candle close above both MAs",
+        "Minimum 10 pips from Asian session open"
+      ],
+      "exit_conditions": [
+        "Fast MA crosses below Slow MA",
+        "Close below the 9 MA",
+        "Hard stop: 20 pips loss"
+      ],
+      "stop_loss_logic": "5-7 pips below entry point (fixed)",
+      "take_profit_logic": "Target: 15 pips. Move to breakeven after 10 pips profit.",
+      "risk_reward_ratio": 1,
+      "best_sessions": ["london", "asian"],
+      "confluence_factors": [
+        "RSI between 40-80 (not at extremes)",
+        "MACD histogram positive",
+        "Price above daily 200 MA (trend bias)"
+      ],
+      "notes": "Fast-paced, requires active monitoring. Use alerts. Best for EURUSD and GBPUSD. Max 3 trades per session.",
+      "created_at": "2026-02-21T09:15:00Z"
+    }
+  ]
+}

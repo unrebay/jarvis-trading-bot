@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trading Mistake Schema",
+  "description": "Schema for documenting trading mistakes for learning and improvement",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the mistake entry",
+      "example": "mistake-001-overleveraging"
+    },
+    "title": {
+      "type": "string",
+      "description": "Brief title of the mistake",
+      "example": "Overleveraged position during high volatility"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["psychology", "technical", "risk_management"],
+      "description": "Category of the mistake",
+      "example": "risk_management"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what happened",
+      "example": "Entered a 5:1 leverage long position on EURUSD during NFP release without checking the economic calendar. Market moved 200 pips against me in 45 seconds."
+    },
+    "context": {
+      "type": "object",
+      "description": "Context details about when and where the mistake occurred",
+      "properties": {
+        "instrument": {
+          "type": "string",
+          "example": "EURUSD"
+        },
+        "timeframe": {
+          "type": "string",
+          "example": "15m"
+        },
+        "session": {
+          "type": "string",
+          "enum": ["london", "new_york", "asian"],
+          "example": "new_york"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "example": "2026-03-15"
+        },
+        "time": {
+          "type": "string",
+          "format": "time",
+          "example": "13:30"
+        },
+        "market_conditions": {
+          "type": "string",
+          "example": "High volatility, economic event pending"
+        }
+      }
+    },
+    "what_went_wrong": {
+      "type": "string",
+      "description": "Analysis of root cause",
+      "example": "Failed to check the economic calendar before trading. Did not adjust position size for elevated volatility. Emotions drove the decision to over-leverage after two winning trades."
+    },
+    "correct_action": {
+      "type": "string",
+      "description": "What should have been done instead",
+      "example": "Check economic calendar before entry. Reduce leverage to 1:2 during major economic events. Wait 30 minutes after NFP release before trading. Use a 1% risk per trade rule."
+    },
+    "lesson_learned": {
+      "type": "string",
+      "description": "Key takeaway and principle to apply",
+      "example": "Volatility adjustments are non-negotiable. Economic events create asymmetric risk-reward. Small consistent profits beat large risky moves."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Impact severity of the mistake",
+      "example": "high"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization and searching",
+      "example": ["leverage", "volatility", "discipline", "position_sizing", "economic_events"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this mistake entry was created",
+      "example": "2026-03-15T14:00:00Z"
+    }
+  },
+  "required": ["id", "title", "category", "description", "context", "what_went_wrong", "correct_action", "lesson_learned", "severity", "tags", "created_at"],
+  "example": {
+    "id": "mistake-002-no-stoplose",
+    "title": "Entered long position without stop loss",
+    "category": "risk_management",
+    "description": "Saw a strong bullish setup on GBPUSD 4h chart and entered without setting a stop loss, expecting it to just work out. Price reversed sharply.",
+    "context": {
+      "instrument": "GBPUSD",
+      "timeframe": "4h",
+      "session": "london",
+      "date": "2026-03-10",
+      "time": "09:15",
+      "market_conditions": "Post-BoE decision, elevated volatility"
+    },
+    "what_went_wrong": "Overconfidence in the setup. Assumed I would have time to add a stop loss. Got distracted and let the loss run to -500 pips before closing.",
+    "correct_action": "Always set stop loss at entry point. Use 1% risk rule: if account is $10k, max loss per trade is $100. Use alerts instead of relying on memory.",
+    "lesson_learned": "A trading plan without a stop loss is not a plan. Discipline trumps prediction. 'I'll do it later' is a dangerous habit.",
+    "severity": "critical",
+    "tags": ["stop_loss", "risk_management", "discipline", "overconfidence", "position_management"],
+    "created_at": "2026-03-10T15:30:00Z"
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trading Checklist Schema",
+  "description": "Schema for pre-trade, post-trade, and session checklists",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the checklist",
+      "example": "checklist-pretrade-001"
+    },
+    "title": {
+      "type": "string",
+      "description": "Name of the checklist",
+      "example": "Pre-Trade Entry Checklist"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["pre_trade", "post_trade", "daily", "weekly"],
+      "description": "Type of checklist",
+      "example": "pre_trade"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "integer",
+            "description": "Step number",
+            "example": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "What to check or verify",
+            "example": "Check economic calendar for next 24 hours"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Is this step mandatory before trading?",
+            "example": true
+          }
+        },
+        "required": ["step", "description", "required"]
+      },
+      "description": "Array of checklist items"
+    },
+    "timeframe": {
+      "type": "string",
+      "description": "When this checklist should be used",
+      "example": "Before every trade"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this checklist was created",
+      "example": "2026-03-01T10:00:00Z"
+    }
+  },
+  "required": ["id", "title", "type", "items", "timeframe", "created_at"],
+  "example": {
+    "id": "checklist-pretrade-forex",
+    "title": "Pre-Trade Entry Checklist - Forex",
+    "type": "pre_trade",
+    "items": [
+      {
+        "step": 1,
+        "description": "Check economic calendar for events in next 4 hours (HIGH impact events only)",
+        "required": true
+      },
+      {
+        "step": 2,
+        "description": "Verify current session (London/NY/Asian) and typical volatility level",
+        "required": true
+      },
+      {
+        "step": 3,
+        "description": "Check daily bias: support/resistance, trend direction, key levels",
+        "required": true
+      },
+      {
+        "step": 4,
+        "description": "Identify entry setup on your chosen timeframe (15m/1h/4h)",
+        "required": true
+      },
+      {
+        "step": 5,
+        "description": "Mark stop loss level and calculate pips to risk",
+        "required": true
+      },
+      {
+        "step": 6,
+        "description": "Calculate position size based on 1% risk rule",
+        "required": true
+      },
+      {
+        "step": 7,
+        "description": "Verify risk-reward ratio is at least 1:1.5 (1:2 preferred)",
+        "required": true
+      },
+      {
+        "step": 8,
+        "description": "Check confluence: Do 2+ factors support this setup?",
+        "required": false
+      },
+      {
+        "step": 9,
+        "description": "Set stop loss, take profit, and entry alerts in platform",
+        "required": true
+      },
+      {
+        "step": 10,
+        "description": "Review trade plan: entry, exit, max loss, why you're taking this trade",
+        "required": true
+      }
+    ],
+    "timeframe": "Before every single trade entry",
+    "created_at": "2026-02-15T08:30:00Z"
+  },
+  "examples": [
+    {
+      "id": "checklist-posttrade-review",
+      "title": "Post-Trade Review Checklist",
+      "type": "post_trade",
+      "items": [
+        {
+          "step": 1,
+          "description": "Document trade outcome: win/loss and pips gained/lost",
+          "required": true
+        },
+        {
+          "step": 2,
+          "description": "Review: Did I follow my entry checklist completely?",
+          "required": true
+        },
+        {
+          "step": 3,
+          "description": "Review: Did price action match my analysis?",
+          "required": true
+        },
+        {
+          "step": 4,
+          "description": "Identify any mistakes or missed opportunities in this trade",
+          "required": false
+        },
+        {
+          "step": 5,
+          "description": "Rate my discipline and emotional control (1-10)",
+          "required": false
+        }
+      ],
+      "timeframe": "After each trade closes",
+      "created_at": "2026-02-15T08:35:00Z"
+    },
+    {
+      "id": "checklist-daily-start",
+      "title": "Daily Trading Session Start Checklist",
+      "type": "daily",
+      "items": [
+        {
+          "step": 1,
+          "description": "Review yesterday's trades and journal entries",
+          "required": true
+        },
+        {
+          "step": 2,
+          "description": "Check account balance and daily drawdown limit (max -2%)",
+          "required": true
+        },
+        {
+          "step": 3,
+          "description": "Verify platform is working correctly and all connections active",
+          "required": true
+        },
+        {
+          "step": 4,
+          "description": "Check economic calendar for today and tomorrow",
+          "required": true
+        },
+        {
+          "step": 5,
+          "description": "Identify major pairs' daily bias and key support/resistance levels",
+          "required": false
+        },
+        {
+          "step": 6,
+          "description": "Set daily profit target (realistic based on past 20 days average)",
+          "required": false
+        }
+      ],
+      "timeframe": "At market open before any trading",
+      "created_at": "2026-02-15T08:40:00Z"
+    }
+  ]
+}

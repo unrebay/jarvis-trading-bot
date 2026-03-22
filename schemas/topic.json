@@ -1,0 +1,238 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trading Topic Schema",
+  "description": "Schema for organizing trading education topics and learning paths",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the topic",
+      "example": "topic-riskmanagement-001"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the learning topic",
+      "example": "Position Sizing and Risk Management"
+    },
+    "section": {
+      "type": "string",
+      "enum": [
+        "beginners",
+        "principles",
+        "market-mechanics",
+        "structure-and-liquidity",
+        "tda-and-entry-models",
+        "trading-psychology",
+        "risk-management"
+      ],
+      "description": "Main section this topic belongs to",
+      "example": "risk-management"
+    },
+    "subtopics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the subtopic",
+            "example": "subtopic-001"
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the subtopic",
+            "example": "The 1% Rule Explained"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Brief summary of what this subtopic covers",
+            "example": "Learn how to calculate the maximum amount you should risk per trade based on your account size to preserve capital and avoid ruin"
+          }
+        },
+        "required": ["id", "title", "summary"]
+      },
+      "description": "Array of subtopics within this topic"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Topic IDs that should be learned before this one",
+      "example": ["topic-beginners-001", "topic-principles-001"]
+    },
+    "difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Difficulty level (1=beginner, 5=advanced)",
+      "example": 3
+    },
+    "estimated_time_minutes": {
+      "type": "integer",
+      "description": "Estimated time to complete this topic",
+      "example": 45,
+      "minimum": 5
+    },
+    "related_topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Topic IDs that are related but not prerequisites",
+      "example": ["topic-psychology-001", "topic-riskmanagement-002"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["discord", "notion", "manual"],
+      "description": "Where this topic content came from",
+      "example": "discord"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this topic was created",
+      "example": "2026-02-10T10:00:00Z"
+    }
+  },
+  "required": ["id", "title", "section", "subtopics", "difficulty", "estimated_time_minutes", "source", "created_at"],
+  "example": {
+    "id": "topic-principles-support-resistance",
+    "title": "Support and Resistance Levels",
+    "section": "principles",
+    "subtopics": [
+      {
+        "id": "subtopic-sr-001",
+        "title": "What is Support and Resistance?",
+        "summary": "Understand how support and resistance are price levels where supply and demand meet, causing price to bounce or reverse"
+      },
+      {
+        "id": "subtopic-sr-002",
+        "title": "Identifying S/R on Charts",
+        "summary": "Learn to visually identify support and resistance by looking for price bounces, wicks, and reversal patterns"
+      },
+      {
+        "id": "subtopic-sr-003",
+        "title": "Dynamic vs Static Levels",
+        "summary": "Distinguish between horizontal S/R levels and dynamic levels like trendlines and moving averages"
+      },
+      {
+        "id": "subtopic-sr-004",
+        "title": "Using S/R for Trading Entries and Exits",
+        "summary": "Learn how professional traders use support and resistance for entry, stop loss, and take profit placement"
+      },
+      {
+        "id": "subtopic-sr-005",
+        "title": "The Concept of Bounce vs Break",
+        "summary": "Understand the difference between price bouncing from a level and breaking through it, and what it signals"
+      }
+    ],
+    "prerequisites": ["topic-beginners-001", "topic-beginners-charts"],
+    "difficulty": 2,
+    "estimated_time_minutes": 60,
+    "related_topics": ["topic-principles-trendlines", "topic-market-mechanics-liquidity", "topic-tda-and-entry-models"],
+    "source": "notion",
+    "created_at": "2026-02-05T14:20:00Z"
+  },
+  "examples": [
+    {
+      "id": "topic-beginners-what-is-forex",
+      "title": "What is Forex? Market Basics",
+      "section": "beginners",
+      "subtopics": [
+        {
+          "id": "subtopic-forex-001",
+          "title": "Currency Pairs Explained",
+          "summary": "Learn what currency pairs are, how they're quoted, and why we trade them in pairs rather than individually"
+        },
+        {
+          "id": "subtopic-forex-002",
+          "title": "Pips, Lot Sizes, and Position Sizing",
+          "summary": "Understand the basic units of measurement in forex: pips, lots, and how position size affects your profit/loss"
+        },
+        {
+          "id": "subtopic-forex-003",
+          "title": "The Forex Market Structure",
+          "summary": "Overview of who trades forex, major currency pairs, trading sessions (London, New York, Asian), and typical volatility"
+        },
+        {
+          "id": "subtopic-forex-004",
+          "title": "Leverage and Margin",
+          "summary": "What leverage is, how margin works, and why it's dangerous if not managed carefully"
+        }
+      ],
+      "prerequisites": [],
+      "difficulty": 1,
+      "estimated_time_minutes": 30,
+      "related_topics": ["topic-beginners-platforms", "topic-risk-management-001"],
+      "source": "manual",
+      "created_at": "2026-01-15T09:00:00Z"
+    },
+    {
+      "id": "topic-trading-psychology-emotional-control",
+      "title": "Emotional Control and Discipline",
+      "section": "trading-psychology",
+      "subtopics": [
+        {
+          "id": "subtopic-psych-001",
+          "title": "Fear and Greed in Trading",
+          "summary": "Recognize how fear and greed affect decision-making and how to manage these emotions for better trading"
+        },
+        {
+          "id": "subtopic-psych-002",
+          "title": "Building a Trading Routine",
+          "summary": "Create consistent pre-trade and post-trade routines that keep you disciplined and emotionally stable"
+        },
+        {
+          "id": "subtopic-psych-003",
+          "title": "Dealing with Losing Streaks",
+          "summary": "Strategies to maintain confidence and discipline during inevitable losing streaks without abandoning your strategy"
+        },
+        {
+          "id": "subtopic-psych-004",
+          "title": "The Revenge Trading Trap",
+          "summary": "Understand why revenge trading occurs and how to prevent it from destroying your account"
+        }
+      ],
+      "prerequisites": ["topic-beginners-what-is-forex", "topic-risk-management-001"],
+      "difficulty": 4,
+      "estimated_time_minutes": 75,
+      "related_topics": ["topic-risk-management-drawdown", "topic-principles-trade-management"],
+      "source": "discord",
+      "created_at": "2026-02-12T11:30:00Z"
+    },
+    {
+      "id": "topic-tda-entry-models",
+      "title": "TDA and Entry Models",
+      "section": "tda-and-entry-models",
+      "subtopics": [
+        {
+          "id": "subtopic-tda-001",
+          "title": "What is TDA (Trading Day Algorithm)?",
+          "summary": "Understand the concept of smart money movement and how TDA identifies where institutions are trading"
+        },
+        {
+          "id": "subtopic-tda-002",
+          "title": "Entry Models: BPB and CHoCH",
+          "summary": "Learn two key entry models: Break of Previous Bar (BPB) and Change of Character (CHoCH)"
+        },
+        {
+          "id": "subtopic-tda-003",
+          "title": "Internal vs External Liquidity",
+          "summary": "Distinguish between internal liquidity (stop runs) and external liquidity (sweeps of key levels)"
+        },
+        {
+          "id": "subtopic-tda-004",
+          "title": "Confluence with Entry Models",
+          "summary": "How to combine entry models with support/resistance, moving averages, and other confluence factors"
+        }
+      ],
+      "prerequisites": ["topic-principles-support-resistance", "topic-structure-and-liquidity"],
+      "difficulty": 4,
+      "estimated_time_minutes": 90,
+      "related_topics": ["topic-market-mechanics-liquidity", "topic-principles-trendlines"],
+      "source": "discord",
+      "created_at": "2026-02-18T13:45:00Z"
+    }
+  ]
+}
