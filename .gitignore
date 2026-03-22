@@ -20,7 +20,14 @@ wheels/
 *.egg
 venv/
 ENV/
+env/
+.venv
+.env
+*.env
+secrets/
 .vscode/
 .idea/
 *.log
+logs/
 .DS_Store
+node_modules/

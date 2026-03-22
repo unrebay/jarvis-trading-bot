@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Example",
+  "description": "Пример сделки или рыночной ситуации с разбором",
+  "type": "object",
+  "required": ["id", "title", "asset", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "example": "example_001"
+    },
+    "title": {
+      "type": "string",
+      "description": "Название примера"
+    },
+    "asset": {
+      "type": "string",
+      "description": "Инструмент (XAUUSD, EURUSD, NQ, etc.)"
+    },
+    "timeframe": {
+      "type": "string",
+      "description": "Таймфрейм анализа"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Дата ситуации"
+    },
+    "description": {
+      "type": "string",
+      "description": "Подробный разбор ситуации"
+    },
+    "context": {
+      "type": "string",
+      "description": "Рыночный контекст (сессия, новости, тренд)"
+    },
+    "setup": {
+      "type": "string",
+      "description": "Описание сетапа"
+    },
+    "entry": {
+      "type": "object",
+      "properties": {
+        "price": { "type": "number" },
+        "type": { "type": "string", "enum": ["market", "limit", "stop"] },
+        "reason": { "type": "string" }
+      }
+    },
+    "exit": {
+      "type": "object",
+      "properties": {
+        "price": { "type": "number" },
+        "reason": { "type": "string" }
+      }
+    },
+    "result": {
+      "type": "string",
+      "enum": ["win", "loss", "breakeven", "missed"],
+      "description": "Результат сделки"
+    },
+    "lessons_learned": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Выводы из примера"
+    },
+    "related_patterns": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "related_rules": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "media": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Скриншоты графиков"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "channel": { "type": "string" },
+        "date": { "type": "string", "format": "date" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

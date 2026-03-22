@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Topic",
+  "description": "Тематический индекс — группировка уроков, правил и паттернов по теме",
+  "type": "object",
+  "required": ["id", "name", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Уникальный идентификатор темы",
+      "example": "topic_structure_liquidity"
+    },
+    "name": {
+      "type": "string",
+      "description": "Название темы"
+    },
+    "description": {
+      "type": "string",
+      "description": "Краткое описание темы"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["technical", "fundamental", "psychology", "risk", "execution", "macro"],
+      "description": "Категория темы"
+    },
+    "level": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"],
+      "description": "Рекомендуемый уровень"
+    },
+    "lessons": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ID связанных уроков"
+    },
+    "rules": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ID связанных правил"
+    },
+    "patterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ID связанных паттернов"
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ID тем, которые нужно изучить до этой"
+    },
+    "source_channels": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Discord каналы — источники"
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "last_updated": "2026-03-22",
+  "server": "DT MATERIAL",
+  "server_id": "1432665676979638406",
+  "status": "in_progress",
+
+  "completed_channels": [
+    {
+      "section": "BEGINNERS",
+      "channels": ["instruments", "live", "terminology"],
+      "notes": "All saved to knowledge/raw/beginners/"
+    },
+    {
+      "section": "PRINCIPLES",
+      "channels": [
+        "intro", "structure-and-liquidity", "inefficiency-types",
+        "block-types", "order-flow-analysis", "tda-and-entry-models"
+      ],
+      "notes": "All Notion links scraped, saved to knowledge/raw/principles/ and knowledge/raw/structure-and-liquidity/ etc."
+    },
+    {
+      "section": "MARKET-MECHANICS",
+      "channels": ["sessions", "advanced-market-analysis"],
+      "notes": "Saved to knowledge/raw/market-mechanics/"
+    },
+    {
+      "section": "MARKET-MECHANICS (video-only, no text)",
+      "channels": ["context", "what-if", "indices-mechanics"],
+      "notes": "Video-only Forum channels — no Notion text content found"
+    },
+    {
+      "section": "GOLD-MECHANICS",
+      "channels": ["work-with-imbalance", "timings", "manipulations"],
+      "notes": "Saved to knowledge/raw/gold-mechanics/"
+    },
+    {
+      "section": "PLAYBOOK",
+      "channels": ["backtest", "risk-management"],
+      "notes": "Saved to knowledge/raw/risk-management/"
+    },
+    {
+      "section": "PLAYBOOK (video-only)",
+      "channels": ["trading-strategy"],
+      "notes": "Video-only Forum channel"
+    },
+    {
+      "section": "PLAYBOOK (partial)",
+      "channels": ["static", "wyckoff"],
+      "notes": "Saved to knowledge/raw/tda-and-entry-models/. Wyckoff has OLDER POSTS not yet checked."
+    }
+  ],
+
+  "partially_scraped": [
+    {
+      "section": "PLAYBOOK",
+      "channel": "news-macro-analysis",
+      "channel_id": "1434296892077903962",
+      "status": "8_posts_scraped_content_lost",
+      "posts_found": [
+        "NEWS. Forex Factory — обзор платформы, экономический календарь, цветовая кодировка",
+        "Инфляция и монетарная политика — Interest Rate, PCE/CPI/PPI, CME FedWatch",
+        "Рынок труда — NFP, Unemployment Rate, Avg Hourly Earnings, JOLTS",
+        "Производственный сектор и ВВП — PMI/ISM, Factory Orders, Durable Goods, GDP",
+        "Энергетика и сырьё — Crude Oil Inventories EIA/API, Cushing, CAD/NOK/RUB",
+        "Потребительская активность — Retail Sales, Personal Income/Spending, Consumer Confidence",
+        "Как интерпретировать макроэкономические данные в торговле — экономические циклы",
+        "Макроэкономические индикаторы и их влияние — полная справочная таблица индикаторов"
+      ],
+      "action_required": "RE-SCRAPE: Content was extracted via Chrome MCP but browser tabs crashed before saving to files. All 8 Notion pages need to be re-fetched from silk-seahorse-538.notion.site",
+      "older_posts_remaining": true
+    }
+  ],
+
+  "pending_channels": [
+    {
+      "section": "PLAYBOOK",
+      "channels": [
+        {"name": "news-macro-analysis (re-scrape + older posts)", "id": "1434296892077903962"},
+        {"name": "wyckoff (older posts)", "id": "1434296745784770773"}
+      ]
+    },
+    {
+      "section": "PSYCHO",
+      "channels": [
+        {"name": "technical-psychology", "id": "1434299315895013519"},
+        {"name": "emotions", "id": "1434299363278196907"},
+        {"name": "discipline", "id": "1434299395259629650"}
+      ]
+    },
+    {
+      "section": "FUNDAMENTAL",
+      "channels": [
+        {"name": "forex-market", "id": "1434298420574814208"},
+        {"name": "microstructure-and-players", "id": "unknown"},
+        {"name": "the-background-of-the-orders", "id": "unknown"},
+        {"name": "arbitration-vs-mm", "id": "unknown"},
+        {"name": "algorithms-and-dynamics", "id": "unknown"},
+        {"name": "trading-through-microstructure", "id": "unknown"}
+      ]
+    },
+    {
+      "section": "MARKET PROFILE",
+      "channels": [
+        {"name": "auction-market-theory", "id": "1434298652851179600"},
+        {"name": "profile-elements", "id": "unknown"},
+        {"name": "openings-relationship", "id": "unknown"},
+        {"name": "market-profile-day-types", "id": "unknown"},
+        {"name": "strategies", "id": "unknown"},
+        {"name": "profiles", "id": "unknown"},
+        {"name": "vwap", "id": "1434297262497861663"}
+      ]
+    },
+    {
+      "section": "DT LIBRARY",
+      "channels": [
+        {"name": "roadmap", "id": "1434299083375251456"},
+        {"name": "useful", "id": "1434299130691190794"},
+        {"name": "ict-mentorship", "id": "1434299169408946277"}
+      ]
+    }
+  ],
+
+  "statistics": {
+    "completed_sections": 8,
+    "total_sections": 14,
+    "files_saved": 63,
+    "file_format": ".md (Notion content)",
+    "raw_txt_files": 20,
+    "raw_txt_format": ".txt (Discord exports, in Трейдинг-агент/knowledge/raw/)"
+  },
+
+  "knowledge_base": {
+    "file": "knowledge_base.json",
+    "version": "2.1",
+    "doc_count": "39+",
+    "status": "needs_rebuild"
+  },
+
+  "resume_instructions": "1. Re-scrape news-macro-analysis (8 Notion pages lost, channel ID 1434296892077903962). 2. Check news-macro-analysis OLDER POSTS. 3. Continue wyckoff older posts. 4. Proceed to PSYCHO → FUNDAMENTAL → MARKET PROFILE → DT LIBRARY in order."
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StrategyCard",
+  "description": "Карточка торговой стратегии — формализованный набор правил и условий для торговли",
+  "type": "object",
+  "required": ["id", "name", "description", "conditions", "risk_params"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "example": "strategy_001"
+    },
+    "name": {
+      "type": "string",
+      "description": "Название стратегии"
+    },
+    "description": {
+      "type": "string",
+      "description": "Описание стратегии"
+    },
+    "assets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Подходящие инструменты"
+    },
+    "timeframes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Рабочие таймфреймы"
+    },
+    "sessions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Подходящие торговые сессии"
+    },
+    "conditions": {
+      "type": "object",
+      "properties": {
+        "context": { "type": "string", "description": "Рыночный контекст / bias" },
+        "setup": { "type": "string", "description": "Условия формирования сетапа" },
+        "trigger": { "type": "string", "description": "Триггер входа" },
+        "confirmation": { "type": "string", "description": "Подтверждение" },
+        "invalidation": { "type": "string", "description": "Отмена сетапа" }
+      }
+    },
+    "risk_params": {
+      "type": "object",
+      "properties": {
+        "risk_per_trade": { "type": "string", "description": "Риск на сделку (%)" },
+        "rr_minimum": { "type": "number", "description": "Минимальный Risk:Reward" },
+        "max_daily_loss": { "type": "string" },
+        "stop_loss_method": { "type": "string" },
+        "take_profit_method": { "type": "string" }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ID правил, входящих в стратегию"
+    },
+    "patterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ID паттернов, используемых в стратегии"
+    },
+    "checklist": {
+      "type": "string",
+      "description": "ID чек-листа"
+    },
+    "backtest_results": {
+      "type": "object",
+      "properties": {
+        "win_rate": { "type": "number" },
+        "avg_rr": { "type": "number" },
+        "sample_size": { "type": "integer" },
+        "period": { "type": "string" }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "testing", "active", "archived"],
+      "description": "Статус стратегии"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "channel": { "type": "string" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

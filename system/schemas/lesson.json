@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lesson",
+  "description": "Единица обучающего контента — урок, объяснение концепции, теория",
+  "type": "object",
+  "required": ["id", "title", "topic", "content", "source"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Уникальный идентификатор урока",
+      "example": "lesson_001"
+    },
+    "title": {
+      "type": "string",
+      "description": "Название урока"
+    },
+    "topic": {
+      "type": "string",
+      "description": "К какой теме относится",
+      "enum": [
+        "structure_liquidity",
+        "order_flow",
+        "tda_entry_models",
+        "risk_management",
+        "psychology",
+        "sessions_timings",
+        "terminology",
+        "inefficiencies",
+        "manipulations",
+        "patterns",
+        "backtest"
+      ]
+    },
+    "level": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"],
+      "description": "Уровень сложности"
+    },
+    "content": {
+      "type": "string",
+      "description": "Текст урока (очищенный, без Discord-мусора)"
+    },
+    "key_points": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Ключевые тезисы урока"
+    },
+    "related_rules": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ID связанных правил"
+    },
+    "related_patterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ID связанных паттернов"
+    },
+    "media": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Пути к изображениям/видео"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["discord", "notion", "manual", "web"] },
+        "channel": { "type": "string" },
+        "author": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "url": { "type": "string" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}
