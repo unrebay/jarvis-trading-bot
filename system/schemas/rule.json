@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rule",
+  "description": "Торговое правило — чёткое условие, которое должно выполняться или не выполняться",
+  "type": "object",
+  "required": ["id", "title", "rule_type", "condition", "action"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Уникальный идентификатор правила",
+      "example": "rule_001"
+    },
+    "title": {
+      "type": "string",
+      "description": "Краткое название правила"
+    },
+    "rule_type": {
+      "type": "string",
+      "enum": ["entry", "exit", "risk", "psychology", "system"],
+      "description": "Тип правила"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"],
+      "description": "Приоритет нарушения"
+    },
+    "condition": {
+      "type": "string",
+      "description": "Условие — когда правило применяется"
+    },
+    "action": {
+      "type": "string",
+      "description": "Что делать / чего не делать"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Почему это правило важно"
+    },
+    "examples": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Примеры применения"
+    },
+    "violations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Типичные нарушения этого правила"
+    },
+    "related_lessons": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "channel": { "type": "string" },
+        "date": { "type": "string", "format": "date" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

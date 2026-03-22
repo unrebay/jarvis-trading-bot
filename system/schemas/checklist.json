@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Checklist",
+  "description": "Чек-лист для систематической проверки условий перед/во время/после сделки",
+  "type": "object",
+  "required": ["id", "title", "checklist_type", "items"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "example": "checklist_001"
+    },
+    "title": {
+      "type": "string",
+      "description": "Название чек-листа"
+    },
+    "checklist_type": {
+      "type": "string",
+      "enum": ["pre_trade", "during_trade", "post_trade", "daily", "weekly"],
+      "description": "Тип чек-листа"
+    },
+    "description": {
+      "type": "string",
+      "description": "Описание — когда и зачем использовать"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["order", "text"],
+        "properties": {
+          "order": { "type": "integer", "description": "Порядковый номер" },
+          "text": { "type": "string", "description": "Текст пункта проверки" },
+          "category": { "type": "string" },
+          "critical": { "type": "boolean", "description": "Обязательный пункт — без него нельзя торговать" }
+        }
+      }
+    },
+    "related_rules": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "channel": { "type": "string" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

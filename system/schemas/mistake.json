@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mistake",
+  "description": "Типичная ошибка в трейдинге — антипаттерн поведения или анализа",
+  "type": "object",
+  "required": ["id", "title", "description", "category"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "example": "mistake_001"
+    },
+    "title": {
+      "type": "string",
+      "description": "Название ошибки"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["entry", "exit", "risk", "psychology", "analysis", "execution"],
+      "description": "Категория ошибки"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "major", "minor"],
+      "description": "Серьёзность ошибки"
+    },
+    "description": {
+      "type": "string",
+      "description": "Подробное описание ошибки"
+    },
+    "why_happens": {
+      "type": "string",
+      "description": "Почему трейдер допускает эту ошибку"
+    },
+    "consequences": {
+      "type": "string",
+      "description": "К чему приводит"
+    },
+    "prevention": {
+      "type": "string",
+      "description": "Как избежать"
+    },
+    "related_rules": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Правила, которые нарушаются"
+    },
+    "examples": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "channel": { "type": "string" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}
