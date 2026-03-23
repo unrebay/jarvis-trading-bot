@@ -21,8 +21,9 @@ git reset --hard origin/production >> "$LOG" 2>&1
 log "      Commit: $(git log -1 --oneline)"
 
 log "[2/4] Installing/updating dependencies..."
-venv/bin/pip install -r requirements.txt -q --no-deps >> "$LOG" 2>&1
-# Pin httpx for gotrue compatibility
+# FIX: removed --no-deps so transitive dependencies of new packages are installed
+venv/bin/pip install -r requirements.txt -q >> "$LOG" 2>&1
+# Pin httpx for gotrue compatibility (must come after full install)
 venv/bin/pip install httpx==0.27.2 --force-reinstall --no-deps -q >> "$LOG" 2>&1
 
 log "[3/4] Restarting jarvis-bot service..."

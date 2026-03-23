@@ -125,11 +125,11 @@ class CostManager:
         Returns:
             Cost in USD
         """
-        # Pricing (as of March 2026)
+        # Pricing (as of March 2026) — matches TokenUsage in claude_client.py
         pricing = {
-            "haiku": {"input": 0.80 / 1_000_000, "output": 0.40 / 1_000_000},
+            "haiku":  {"input": 0.80 / 1_000_000, "output": 4.00 / 1_000_000},   # FIX: was 0.40 (10x undercount)
             "sonnet": {"input": 3.00 / 1_000_000, "output": 15.00 / 1_000_000},
-            "opus": {"input": 15.00 / 1_000_000, "output": 75.00 / 1_000_000},
+            "opus":   {"input": 15.00 / 1_000_000, "output": 75.00 / 1_000_000},
         }
 
         if model not in pricing:

@@ -9,6 +9,21 @@ import json
 import time
 from dataclasses import dataclass
 
+# Lazy import to avoid circular — cost_manager is a module-level singleton
+def _record_cost(model_name: str, feature: str, usage: "TokenUsage") -> None:
+    """Wire actual API usage into CostManager for budget tracking."""
+    try:
+        from .cost_manager import cost_manager
+        cost_manager.reset_daily_limit()  # ensure today's tracker
+        cost_manager.record_cost(
+            model=model_name,
+            feature=feature,
+            input_tokens=usage.input_tokens + usage.cache_creation_input_tokens,
+            output_tokens=usage.output_tokens,
+        )
+    except Exception:
+        pass  # cost tracking is non-critical
+
 
 # Константы моделей
 HAIKU = "claude-haiku-4-5-20251001"
@@ -220,6 +235,7 @@ class ClaudeClient:
             cache_creation_input_tokens=getattr(response.usage, "cache_creation_input_tokens", 0),
             cache_read_input_tokens=getattr(response.usage, "cache_read_input_tokens", 0),
         )
+        _record_cost("haiku", "mentoring", self.last_usage)  # FIX: wire into budget tracker
 
         return response.content[0].text
 

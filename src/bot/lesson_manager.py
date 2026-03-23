@@ -113,6 +113,13 @@ class LessonManager:
 
         try:
             resp = self.claude._retry_with_backoff(_call)
+            # Wire into cost tracker
+            try:
+                from .cost_manager import cost_manager
+                cost_manager.record_cost("haiku", "lesson",
+                    resp.usage.input_tokens, resp.usage.output_tokens)
+            except Exception:
+                pass
             return resp.content[0].text
         except Exception as e:
             return f"❌ Не удалось сгенерировать урок: {e}"
@@ -167,6 +174,13 @@ class LessonManager:
 
         try:
             resp = self.claude._retry_with_backoff(_call)
+            # Wire into cost tracker
+            try:
+                from .cost_manager import cost_manager
+                cost_manager.record_cost("haiku", "quiz",
+                    resp.usage.input_tokens, resp.usage.output_tokens)
+            except Exception:
+                pass
             text = resp.content[0].text.strip()
 
             # Strip markdown fences

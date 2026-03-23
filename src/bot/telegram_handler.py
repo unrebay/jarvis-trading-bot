@@ -104,7 +104,9 @@ class TelegramHandler:
 
     async def handle_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /status command — показывает текущий режим и бюджет."""
-        summary = cost_manager.get_daily_summary()
+        # FIX: access tracker fields directly (get_daily_summary() returns a string, not dict)
+        cost_manager.reset_daily_limit()  # ensure today's tracker is current
+        tracker = cost_manager.tracker
         mode    = cost_manager.get_mode()
 
         mode_emoji = {"FULL": "🟢", "LITE": "🟡", "OFFLINE": "🔴"}.get(mode.value, "⚪")
@@ -114,12 +116,14 @@ class TelegramHandler:
             "OFFLINE": "только база знаний (API лимит)"
         }.get(mode.value, "неизвестно")
 
+        remaining = cost_manager.daily_budget - tracker.total_cost
         await update.message.reply_text(
             f"📊 JARVIS Status:\n\n"
             f"{mode_emoji} Режим: {mode.value} ({mode_desc})\n"
-            f"💰 Потрачено сегодня: ${summary['total_cost']:.4f} / $1.00\n"
-            f"📈 Запросов: {summary['request_count']}\n"
-            f"🖼 Анализов графиков: {summary['vision_calls']}"
+            f"💰 Потрачено сегодня: ${tracker.total_cost:.4f} / ${cost_manager.daily_budget:.2f}\n"
+            f"💵 Остаток: ${remaining:.4f}\n"
+            f"📈 Запросов: {tracker.request_count}\n"
+            f"🖼 Анализов графиков: {tracker.vision_calls}"
         )
 
     # ── /chart — live chart generation + auto-analysis ───────────────────────
@@ -212,9 +216,11 @@ class TelegramHandler:
             print(f"⚠️ reply_photo failed: {e}")
             await update.message.reply_text(caption)
 
-        # 7. Update memory counter
+        # 7. Update memory counter + trigger portrait update if needed
         memory = self.user_memory.increment(memory)
         self.user_memory.save(user_id, memory)
+        if self.user_memory.should_update(memory):
+            asyncio.create_task(self._update_memory_async(user_id, memory))
 
     # ── /lesson ────────────────────────────────────────────────────────────────
 
@@ -247,10 +253,12 @@ class TelegramHandler:
         lesson_text = self.lesson_manager.get_lesson(topic, user_level)
         await update.message.reply_text(lesson_text)
 
-        # Update memory: add topic to current_focus
+        # Update memory: add topic to current_focus + trigger portrait update if needed
         memory["learning"]["current_focus"] = topic
         memory = self.user_memory.increment(memory)
         self.user_memory.save(user_id, memory)
+        if self.user_memory.should_update(memory):
+            asyncio.create_task(self._update_memory_async(user_id, memory))
 
     # ── /quiz — Telegram native quiz polls ─────────────────────────────────────
 
@@ -321,9 +329,11 @@ class TelegramHandler:
                     f"❓ {q['question']}\n{options_text}\n\n✅ Ответ: {correct}\n{q.get('explanation','')}"
                 )
 
-        # Update memory
+        # Update memory + trigger portrait update if needed
         memory = self.user_memory.increment(memory)
         self.user_memory.save(user_id, memory)
+        if self.user_memory.should_update(memory):
+            asyncio.create_task(self._update_memory_async(user_id, memory))
 
     # ── /progress ──────────────────────────────────────────────────────────────
 
@@ -544,14 +554,18 @@ class TelegramHandler:
             if warning:
                 reply += f"\n\n{warning}"
 
-            await update.message.reply_text(reply, parse_mode="Markdown")
+            # FIX: Markdown parse_mode crashes when Claude response has unescaped * _ `
+            # Try with Markdown first, silently fall back to plain text on parse error
+            try:
+                await update.message.reply_text(reply, parse_mode="Markdown")
+            except Exception:
+                await update.message.reply_text(reply)
 
         except Exception as e:
             print(f"❌ Message error: {e}")
             import traceback; traceback.print_exc()
             await update.message.reply_text(
-                f"⚠️ Произошла ошибка. Попробуй ещё раз.\n`{str(e)[:80]}`",
-                parse_mode="Markdown"
+                f"⚠️ Произошла ошибка. Попробуй ещё раз.\n({str(e)[:80]})"
             )
 
     # ── Memory update (background task) ──────────────────────────────────────
@@ -763,19 +777,22 @@ class TelegramHandler:
             print(f"❌ Save message error: {e}")
 
     def _increment_user_messages(self, user_id: int) -> None:
-        """Increment user message counter.
-        БАГ #3 ИСПРАВЛЕН: убран сломанный RPC внутри update().
-        Теперь: select → increment → update.
-        """
+        """Increment user message counter — single atomic SQL UPDATE (no SELECT needed)."""
         try:
-            res = self.supabase.table("bot_users").select(
-                "messages_count"
-            ).eq("telegram_id", user_id).execute()
-
-            if res.data:
-                current = res.data[0].get("messages_count") or 0
-                self.supabase.table("bot_users").update({
-                    "messages_count": current + 1
-                }).eq("telegram_id", user_id).execute()
-        except Exception as e:
-            print(f"⚠️ Stats update error: {e}")
+            self.supabase.rpc(
+                "increment_messages",
+                {"uid": user_id},
+            ).execute()
+        except Exception:
+            # Fallback: classic select → update if RPC not available
+            try:
+                res = self.supabase.table("bot_users").select(
+                    "messages_count"
+                ).eq("telegram_id", user_id).execute()
+                if res.data:
+                    current = res.data[0].get("messages_count") or 0
+                    self.supabase.table("bot_users").update({
+                        "messages_count": current + 1
+                    }).eq("telegram_id", user_id).execute()
+            except Exception as e:
+                print(f"⚠️ Stats update error: {e}")
