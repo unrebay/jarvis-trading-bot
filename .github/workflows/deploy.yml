@@ -25,6 +25,8 @@ jobs:
 
             echo "── Installing/updating dependencies..."
             venv/bin/pip install -r requirements.txt -q
+            # gotrue 2.12.x uses proxy= which breaks with httpx>=0.28 — force pin
+            venv/bin/pip install httpx==0.27.2 --force-reinstall -q
 
             echo "── Restarting bot..."
             systemctl restart jarvis-bot
