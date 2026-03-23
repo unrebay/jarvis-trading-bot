@@ -1,0 +1,24 @@
+{
+  "id": "lesson_risk-management_why_backtest_matters",
+  "title": "Why Backtest Matters? (Почему бектест важен?)",
+  "description": "Lesson on Why Backtest Matters? (Почему бектест важен?)",
+  "category": "risk-management",
+  "level": "intermediate",
+  "content": "# Why Backtest Matters? (Почему бектест важен?)\n\n## Важен ли бектест?\n\n100%. Его важность колоссальна. Бектест позволяет:\n- Проверить идеи и предположения на реальных рыночных условиях\n- Определить показатели риска и доходности\n- Провести статистику идеи и понять, работает ли она\n\n## Цель бектеста\n\n**Основная цель бектеста — сбор статистических данных.**\n\nБектест — это не рутина и не обыденность. Нельзя просто \"бектестить график\" без цели.\n\nПравильный подход:\n1. Сформулировать **разумную идею с чёткими переменными**\n2. Только тогда обращаться к бектесту за данными\n3. Подходить к сбору данных с **честностью и ответственностью**\n\n## Сколько бектестить?\n\nЕсли есть конкретный запрос — можно сидеть за чартом 8 часов. Если все идеи уже протестированы и данные собраны — нет смысла тратить время впустую. Нужно просто повторять отработанные действия в реальном времени.\n\n## Вывод\n\nДелайте бектест с пользой, а не для галочки. Давайте конкретный запрос — и трейдинг отплатит взаимностью.\n\n## Источник\n\n[Why backtest matters? | Notion](https://silk-seahorse-538.notion.site/Why-backtest-matters-61c5128e027e4162846f1f018cb4e80e)\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.518492",
+  "updated_at": "2026-03-22T22:05:44.518497",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "risk-management"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/risk-management/why-backtest-matters.md",
+  "file_hash": "45070b798cdc",
+  "status": "active"
+}

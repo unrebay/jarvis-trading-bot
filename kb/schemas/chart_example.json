@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Chart Example",
+  "description": "Annotated chart example illustrating patterns, setups, or concepts",
+  "type": "object",
+  "required": ["id", "title", "image_url"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^chart_[a-z0-9_]+$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Chart example title"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this chart illustrates"
+    },
+    "image_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to chart image"
+    },
+    "image_id": {
+      "type": "string",
+      "pattern": "^image_[a-z0-9_]+$",
+      "description": "Reference to image_annotation entity"
+    },
+    "instrument": {
+      "type": "string",
+      "description": "What was traded (e.g., 'EURUSD', 'Gold')"
+    },
+    "timeframe": {
+      "type": "string",
+      "enum": ["1M", "5M", "15M", "1H", "4H", "1D", "1W"],
+      "description": "Chart timeframe"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the setup"
+    },
+    "patterns_illustrated": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^pattern_[a-z0-9_]+$"},
+      "description": "Patterns shown in this chart"
+    },
+    "lessons": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^lesson_[a-z0-9_]+$"},
+      "description": "Lessons this chart illustrates"
+    },
+    "entry_point": {
+      "type": "string",
+      "description": "Where to enter"
+    },
+    "exit_point": {
+      "type": "string",
+      "description": "Where to exit"
+    },
+    "risk_reward": {
+      "type": "string",
+      "description": "Achieved RR ratio"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["winner", "loser", "breakeven", "partial"],
+      "description": "Trade outcome"
+    },
+    "key_levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "level": {"type": "number"},
+          "type": {"type": "string", "enum": ["support", "resistance", "liquidation", "entry", "exit"]},
+          "description": {"type": "string"}
+        }
+      }
+    },
+    "annotations": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Text annotations on the chart"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

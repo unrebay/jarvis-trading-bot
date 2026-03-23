@@ -1,0 +1,24 @@
+{
+  "id": "lesson_tda-and-entry-models_institutional_order_fl",
+  "title": "Institutional Order Flow (IOF)",
+  "description": "Lesson on Institutional Order Flow (IOF)",
+  "category": "tda-and-entry-models",
+  "level": "advanced",
+  "content": "# Institutional Order Flow (IOF)\n\n## Определение\n\n**IOF (Institutional Order Flow)** — институциональный поток приказов, включающий в себя элементы Price Action.\n\n## Разница между OF и IOF\n\n- **OF (Order Flow)** — общее понятие, описывающее способ доставки цены к цели через постоянную работу с ликвидностью\n- **IOF** — подвид OF, который появляется на **младшем таймфрейме при тесте HTF POI** или снятии больших пулов ликвидности\n\n## Элементы IOF\n\nIOF включает в себя:\n- **MS Shift** (сдвиг структуры)\n- **Flip** (инверсия)\n- **OF Break** (слом потока ордеров)\n- **Rebalance** (ребалансировка)\n- **LG** (ликвидность)\n- **Advanced MS** (продвинутая рыночная структура)\n\n## Формирование IOF\n\n### Part №1\nВсё начинается с реакции от зон интереса. В первую очередь нужно увидеть **сдвиг в структуре с инверсией**. Следующим ожидается ребалансировка или митигация, после чего — работа с ликвидностью и формирование продвинутой структуры.\n\n### Part №2\nС новым таймингом или после достижения локальной цели важно понять, что сформировалось внутри этого движения со стороны HTF. Если «магнит» для цены сформирован — логично дождаться его там и начать работать от свежесформированного IOF.\n\n### Part №3\nПри достижении новосформированной зоны интереса применяется та же логика, что и в первой части.\n\n## Ключевое преимущество IOF\n\nIOF позволяет рассматривать **сразу несколько моделей входа** в одной ситуации:\n- **Entry Model #1** — вход от первого импульсного движения с инверсией\n- **Entry Model #2** — вход после ребалансировки и формирования нового потока\n\n## Применение\n\nIOF используется как уточнённый инструмент для входов внутри HTF POI. Он объединяет структурный анализ, ликвидность и Price Action на младшем таймфрейме для получения оптимальных точек входа с высоким RR.\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.612798",
+  "updated_at": "2026-03-22T22:05:44.612801",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "tda-and-entry-models"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/tda-and-entry-models/institutional-order-flow.md",
+  "file_hash": "641fdbcb5b80",
+  "status": "active"
+}

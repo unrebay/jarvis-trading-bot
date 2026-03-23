@@ -1,0 +1,24 @@
+{
+  "id": "lesson_principles_propulsion_block_pb",
+  "title": "Propulsion Block (PB)",
+  "description": "Lesson on Propulsion Block (PB)",
+  "category": "principles",
+  "level": "intermediate",
+  "content": "# Propulsion Block (PB)\n\n## Определение\n\n**Propulsion Block (PB)** — это блок или свеча, сформированная **внутри Ордер Блока в момент теста**. В последствии данная свеча берет на себя роль ценовой поддержки для более высокого/низкого ценового движения.\n\n## Логика формирования\n\nPropulsion Block формируется в момент, когда цена тестирует Order Block. Внутри этого теста образуется свеча/блок, который в дальнейшем выступает как зона поддержки/сопротивления для продолжения движения.\n\n## Применение\n\n- Используется как уточнённая точка входа внутри Order Block\n- Позволяет получить более точный уровень для стопа\n- Является зоной спроса/предложения наряду с Breaker Block, Mitigation Block, Rejection Block\n- Применяется в контексте торговой модели как POI\n\n## Связь с другими концептами\n\n- Формируется **внутри OB** (в отличие от Breaker, который OB прошит FVG)\n- Даёт более точную зону внутри старшего POI\n- Используется совместно со структурой и контекстом\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.596966",
+  "updated_at": "2026-03-22T22:05:44.596970",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "principles"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/principles/propulsion-block.md",
+  "file_hash": "fbae9643eb21",
+  "status": "active"
+}

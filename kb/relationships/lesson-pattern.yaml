@@ -1,0 +1,39 @@
+# Lesson to Pattern relationships
+# Maps which lessons teach which patterns
+
+relationships:
+  - lesson_id: lesson_judas_swings
+    pattern_ids:
+      - pattern_judas_swing
+      - pattern_break_of_structure
+    description: "Detailed explanation of Judas swing mechanics and identification"
+
+  - lesson_id: lesson_ict_basics
+    pattern_ids:
+      - pattern_break_of_structure
+      - pattern_market_structure
+      - pattern_liquidity_grab
+    description: "Introduction to ICT concepts and key patterns"
+
+  - lesson_id: lesson_session_dynamics
+    pattern_ids:
+      - pattern_london_open
+      - pattern_new_york_open
+      - pattern_asia_session
+    description: "Session-based trading patterns and timings"
+
+  - lesson_id: lesson_risk_management
+    pattern_ids:
+      - pattern_risk_reward_setup
+    description: "RR calculation and position sizing relative to patterns"
+
+  - lesson_id: lesson_market_structure
+    pattern_ids:
+      - pattern_market_structure
+      - pattern_supply_demand
+    description: "Market structure concepts and visual identification"
+
+# Metadata
+version: "1.0"
+created_at: "2026-03-22"
+last_updated: "2026-03-22"

@@ -1,0 +1,127 @@
+{
+  "category": "principles",
+  "total_lessons": 20,
+  "lessons": [
+    {
+      "id": "lesson_principles_bpr_balanced_price_range",
+      "title": "BPR (Balanced Price Range)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_breaker_block",
+      "title": "Breaker Block",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_entry_models",
+      "title": "Entry Models — Модели входа",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_fair_value_gap_fvg",
+      "title": "Fair Value Gap (FVG) — Ценовой Дисбаланс",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_fibonacci_premium_discount_ote",
+      "title": "Fibonacci, Premium/Discount, OTE",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_",
+      "title": "Эффективная и неэффективная доставка цены. Ребалансировка.",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_gap",
+      "title": "GAP — Ценовой дисбаланс",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_inversion_fair_value_gap_ifvg",
+      "title": "Inversion Fair Value Gap (IFVG)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_inducement",
+      "title": "Inducement (Индюсмент)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_mitigation_block",
+      "title": "Mitigation Block",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_market_structure_shift_displacem",
+      "title": "Market Structure Shift & Displacement",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_order_flow_validation_invalidati",
+      "title": "Order Flow Validation & Invalidation",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_order_flow_of",
+      "title": "Order Flow (OF) — Поток приказов",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_poi_point_of_interest",
+      "title": "POI (Point of Interest)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_propulsion_block_pb",
+      "title": "Propulsion Block (PB)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_rejection_block_rb",
+      "title": "Rejection Block (RB)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_snr_support_resistance",
+      "title": "SNR (Support / Resistance)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_",
+      "title": "Зона спроса/предложения как сбалансированный диапазон",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_volume_imbalance_vi",
+      "title": "Volume Imbalance (VI)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_principles_why_poi_not_poi_poi",
+      "title": "Why POI not POI? (Почему POI не работает)",
+      "level": "intermediate",
+      "reading_time": 1
+    }
+  ],
+  "created_at": "2026-03-22T22:05:44.627981"
+}

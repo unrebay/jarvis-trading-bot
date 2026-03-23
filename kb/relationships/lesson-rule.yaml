@@ -1,0 +1,41 @@
+# Lesson to Rule relationships
+# Maps which lessons teach which rules
+
+relationships:
+  - lesson_id: lesson_risk_management
+    rule_ids:
+      - rule_risk_management_percentage
+      - rule_breakeven_stop
+      - rule_risk_reward_minimum
+    description: "Core risk management rules and their application"
+
+  - lesson_id: lesson_psychology
+    rule_ids:
+      - rule_emotion_control
+      - rule_follow_plan
+      - rule_no_revenge_trading
+    description: "Psychological discipline rules"
+
+  - lesson_id: lesson_ict_basics
+    rule_ids:
+      - rule_never_trade_against_structure
+      - rule_wait_for_confirmation
+      - rule_higher_timeframe_confirmation
+    description: "Foundational ICT rules"
+
+  - lesson_id: lesson_market_structure
+    rule_ids:
+      - rule_never_trade_against_structure
+      - rule_confluence_requirement
+    description: "Market structure identification and respect"
+
+  - lesson_id: lesson_session_dynamics
+    rule_ids:
+      - rule_session_awareness
+      - rule_high_volume_confirmation
+    description: "Session-specific trading rules"
+
+# Metadata
+version: "1.0"
+created_at: "2026-03-22"
+last_updated: "2026-03-22"

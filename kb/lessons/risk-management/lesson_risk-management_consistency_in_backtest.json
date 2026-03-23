@@ -1,0 +1,24 @@
+{
+  "id": "lesson_risk-management_consistency_in_backtest",
+  "title": "Consistency in Backtest (Последовательность в бектесте)",
+  "description": "Lesson on Consistency in Backtest (Последовательность в бектесте)",
+  "category": "risk-management",
+  "level": "intermediate",
+  "content": "# Consistency in Backtest (Последовательность в бектесте)\n\n## Концепция\n\nПоследовательность исходит из **опыта и понимания рынка**.\n\n> Понимание = опыт + размышление\n\n## Путь к последовательности\n\n1. **Бектест на истории** — строит собственный фреймворк (фиксированные элементы: структура, ликвидность, поток ордеров, контекст)\n2. **Отработка точек входа** — там, где больше переменных\n3. **Живая торговля** — только реальная практика даёт согласованность. Бектест один не достаточен\n\n## Рефлексия\n\nПосле сделок необходима **рефлексия** — анализ и детальный разбор всего: желаний, действий, эмоций, поведения.\n\nДва типа ошибок, которые нужно разбирать:\n- **Эмоциональные ошибки**\n- **Технические ошибки**\n\n## Вывод\n\n- **Уверенность** добывается путём бектеста\n- **Постоянство и осознанность** — только через практику в реальном времени\n\nОткиньте лень и доверьтесь процессу. Повторяйте снова и снова.\n\n## Источник\n\n[Consistency in backtest. | Notion](https://silk-seahorse-538.notion.site/Consistency-in-backtest-fcfee4fd438c4f16b7a78f26318e4430)\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.506679",
+  "updated_at": "2026-03-22T22:05:44.506687",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "risk-management"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/risk-management/consistency-in-backtest.md",
+  "file_hash": "682e0cceae61",
+  "status": "active"
+}

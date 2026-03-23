@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Mistake Case",
+  "description": "Common trading mistake with analysis",
+  "type": "object",
+  "required": ["id", "title", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^mistake_[a-z0-9_]+$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Mistake title"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the mistake is"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": ["very-common", "common", "occasional", "rare"],
+      "description": "How often this mistake occurs"
+    },
+    "consequence": {
+      "type": "string",
+      "description": "What happens when this mistake is made"
+    },
+    "why_it_happens": {
+      "type": "string",
+      "description": "Root cause analysis"
+    },
+    "how_to_avoid": {
+      "type": "string",
+      "description": "Prevention strategy"
+    },
+    "related_rules": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^rule_[a-z0-9_]+$"},
+      "description": "Rules that prevent this mistake"
+    },
+    "related_lessons": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^lesson_[a-z0-9_]+$"}
+    },
+    "chart_examples": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^chart_[a-z0-9_]+$"}
+    },
+    "severity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Impact severity (1=minor, 5=account-ruining)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

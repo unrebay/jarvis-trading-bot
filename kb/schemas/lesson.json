@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lesson",
+  "description": "Core educational lesson on trading concepts",
+  "type": "object",
+  "required": ["id", "title", "category", "level", "content"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^lesson_[a-z0-9_]+$",
+      "description": "Unique lesson identifier"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 200,
+      "description": "Lesson title"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Brief summary of the lesson"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "market-mechanics",
+        "risk-management",
+        "psychology",
+        "principles",
+        "structure-and-liquidity",
+        "tda-and-entry-models",
+        "gold-mechanics",
+        "beginners"
+      ],
+      "description": "Lesson category"
+    },
+    "level": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"],
+      "description": "Difficulty level"
+    },
+    "content": {
+      "type": "string",
+      "minLength": 100,
+      "description": "Markdown formatted lesson content"
+    },
+    "learning_objectives": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "What the learner will understand"
+    },
+    "related_topics": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^topic_[a-z0-9_]+$"},
+      "description": "References to related topics"
+    },
+    "related_rules": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^rule_[a-z0-9_]+$"},
+      "description": "References to related rules"
+    },
+    "related_patterns": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^pattern_[a-z0-9_]+$"},
+      "description": "References to related patterns"
+    },
+    "chart_examples": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^chart_[a-z0-9_]+$"},
+      "description": "References to chart examples"
+    },
+    "mistake_cases": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^mistake_[a-z0-9_]+$"},
+      "description": "Common mistakes to avoid"
+    },
+    "estimated_read_time": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Estimated reading time in minutes"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    },
+    "author": {
+      "type": "string",
+      "description": "Lesson author"
+    },
+    "tags": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Searchable tags"
+    }
+  }
+}
