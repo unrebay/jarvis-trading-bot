@@ -1,22 +1,31 @@
 """
-telegram_handler.py — Обработка Telegram сообщений (v2.2)
+telegram_handler.py — Обработка Telegram сообщений (v2.3)
 
-Исправлено:
-- Баг #1: неправильные параметры ask_mentor() → правильные (user_message, knowledge_context)
-- Баг #2: двойная инициализация Anthropic → принимает ClaudeClient напрямую
-- Баг #3: сломанный _update_user_stats() → простой select+update
-- Новое: интеграция CostManager (FULL/LITE/OFFLINE режимы)
-- Новое: /status команда — показывает бюджет и режим
+Changes v2.3 (iMac):
+- Photo analysis now uses ChartAnnotator + ChartDrawer
+  → sends ANNOTATED IMAGE back (FVG, S/R, BOS/CHoCH drawn on chart)
+  → plus text analysis with ICT/SMC vocabulary
+- /analyze command added (same as sending a photo)
+- ImageHandler kept for backward-compat but not used for photos
+
+Previous fixes (v2.2):
+- Баг #1: неправильные параметры ask_mentor()
+- Баг #2: двойная инициализация Anthropic
+- Баг #3: сломанный _update_user_stats()
+- Интеграция CostManager (FULL/LITE/OFFLINE режимы)
 """
 
+import io
 import os
-from telegram import Update
+from telegram import Update, InputFile
 from telegram.ext import ContextTypes
 from supabase import Client
 
 from .rag_search import RAGSearch
 from .claude_client import ClaudeClient
 from .image_handler import ImageHandler
+from .chart_annotator import ChartAnnotator
+from .chart_drawer import ChartDrawer
 from .cost_manager import cost_manager, BotMode
 
 
@@ -27,7 +36,10 @@ class TelegramHandler:
         self.supabase = supabase
         self.rag      = rag
 
-        # ImageHandler использует тот же ClaudeClient
+        # Chart analysis modules (v2.3)
+        self.chart_annotator = ChartAnnotator(claude_client)
+
+        # ImageHandler kept for legacy / fallback
         self.image_handler = ImageHandler(self.claude, supabase)
 
     # ── Команды ───────────────────────────────────────────────────────────────
@@ -41,9 +53,9 @@ class TelegramHandler:
         await update.message.reply_text(
             "🤖 Привет! Я JARVIS — твой AI-ментор по трейдингу ICT/SMC методологии.\n\n"
             "Я могу помочь:\n"
-            "✅ Объяснить концепции (FVG, POI, MSS, BOS...)\n"
+            "✅ Объяснить концепции (FVG, OB, POI, MSS, BOS, CHoCH...)\n"
             "✅ Разобрать стратегии и entry models\n"
-            "✅ Проанализировать твой график (отправь фото)\n\n"
+            "✅ Проанализировать график с визуальными аннотациями 🖼️\n\n"
             "Просто напиши вопрос или отправь скриншот графика!\n"
             "/help — список команд  |  /status — состояние бота"
         )
@@ -54,13 +66,15 @@ class TelegramHandler:
             "📖 КОМАНДЫ:\n\n"
             "/start   — начать диалог\n"
             "/help    — эта справка\n"
-            "/status  — бюджет и режим работы бота\n\n"
+            "/status  — бюджет и режим работы бота\n"
+            "/analyze — анализ графика (отправь фото с командой)\n\n"
             "🎓 УРОВНИ ОБУЧЕНИЯ (отвечаю под твой уровень):\n"
             "• Beginner — основы (инструменты, терминология)\n"
             "• Intermediate — принципы (структура, ликвидность, POI)\n"
             "• Advanced — мульти-ТФ, entry models\n"
             "• Professional — institutional flow, psychology\n\n"
-            "💡 Просто напиши вопрос по трейдингу или отправь фото графика!"
+            "🖼 Для анализа графика: отправь скриншот.\n"
+            "Я нарисую FVG, OB, BOS/CHoCH, S/R прямо на твоём графике!"
         )
 
     async def handle_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -147,10 +161,10 @@ class TelegramHandler:
                 parse_mode="Markdown"
             )
 
-    # ── Фото (анализ графиков) ─────────────────────────────────────────────────
+    # ── Фото (анализ графиков с визуальными аннотациями) ─────────────────────
 
     async def handle_photo(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle photo uploads — trading chart analysis."""
+        """Handle photo uploads — ICT/SMC chart analysis with visual annotations."""
         user_id  = update.effective_user.id
         username = update.effective_user.username or "Anonymous"
         self._ensure_user_exists(user_id, username)
@@ -165,65 +179,100 @@ class TelegramHandler:
                 )
             else:
                 await update.message.reply_text(
-                    "🟡 Лимит анализов графиков на час исчерпан.\n"
+                    "🟡 Лимит анализов графиков исчерпан.\n"
                     "Попробуй через несколько минут или задай вопрос текстом."
                 )
             return
 
-        await update.message.chat.send_action("typing")
+        await update.message.chat.send_action("upload_photo")
+        caption = update.message.caption or ""
 
         try:
-            # Скачиваем фото (берём максимальное качество)
-            photo    = update.message.photo[-1]
-            file     = await context.bot.get_file(photo.file_id)
-            file_path = f"/tmp/chart_{photo.file_id}.jpg"
-            await file.download_to_drive(file_path)
+            # 1. Скачиваем фото (берём максимальное качество)
+            photo = update.message.photo[-1]
+            file  = await context.bot.get_file(photo.file_id)
 
-            caption = update.message.caption or ""
-            await update.message.reply_text("🔍 Анализирую график...")
+            image_bytes_io = io.BytesIO()
+            await file.download_to_memory(image_bytes_io)
+            image_bytes = image_bytes_io.getvalue()
 
-            result = self.image_handler.process_image_upload(
-                file_path,
-                context={"title": caption or "Trading Chart", "description": caption}
-            )
+            await update.message.reply_text("🔍 Анализирую ICT/SMC структуру...")
 
-            if result.get("success"):
-                analysis = result.get("analysis", {})
-                patterns = analysis.get("detected_patterns", [])
-                levels   = analysis.get("key_levels", [])
-                points   = analysis.get("learning_points", [])[:3]
+            # 2. Анализ через ChartAnnotator (Claude Vision)
+            ctx = {}
+            if caption:
+                # Пытаемся извлечь инструмент/таймфрейм из подписи
+                ctx["instrument"] = caption
+            result = self.chart_annotator.analyze_chart(image_bytes, context=ctx)
 
-                lines = [f"📊 **Анализ графика:**\n"]
-                lines.append(f"**Тип:** {analysis.get('analysis_type', 'N/A')}  "
-                             f"**Уверенность:** {analysis.get('confidence', 0):.0%}\n")
-
-                if patterns:
-                    lines.append("**Паттерны:**")
-                    lines += [f"• {p}" for p in patterns]
-
-                if levels:
-                    lines.append("\n**Ключевые уровни:**")
-                    lines += [f"• {l.get('type','').upper()}: {l.get('level','N/A')}" for l in levels]
-
-                if points:
-                    lines.append("\n**Выводы:**")
-                    lines += [f"• {p}" for p in points]
-
-                response_text = "\n".join(lines)
-
-                self._save_message(user_id, "user",      f"[Chart] {caption}")
-                self._save_message(user_id, "assistant", response_text)
-                self._increment_user_messages(user_id)
-
-                warning = cost_manager.get_cost_warning()
-                if warning:
-                    response_text += f"\n\n{warning}"
-
-                await update.message.reply_text(response_text, parse_mode="Markdown")
-            else:
+            if not result.get("success"):
                 await update.message.reply_text(
                     f"❌ Не удалось проанализировать: {result.get('error', 'неизвестная ошибка')}"
                 )
+                return
+
+            drawing_instructions = result.get("drawing_instructions", {})
+            analysis_text        = result.get("analysis_text", "")
+
+            # 3. Рисуем аннотации на графике (ChartDrawer)
+            annotated_bytes = None
+            has_drawings = any([
+                drawing_instructions.get("fvg_zones"),
+                drawing_instructions.get("sr_levels"),
+                drawing_instructions.get("bos_markers"),
+                drawing_instructions.get("order_blocks"),
+                drawing_instructions.get("liquidity_sweeps"),
+            ])
+
+            if has_drawings:
+                try:
+                    drawer = ChartDrawer(image_bytes)
+                    annotated_bytes = drawer.draw(drawing_instructions)
+                except Exception as draw_err:
+                    print(f"⚠️ Drawing error (non-fatal): {draw_err}")
+
+            # 4. Считаем количество элементов для заголовка
+            n_fvg  = len(drawing_instructions.get("fvg_zones",       []))
+            n_sr   = len(drawing_instructions.get("sr_levels",        []))
+            n_bos  = len(drawing_instructions.get("bos_markers",      []))
+            n_ob   = len(drawing_instructions.get("order_blocks",     []))
+            n_liq  = len(drawing_instructions.get("liquidity_sweeps", []))
+
+            header = "📊 *Анализ графика*"
+            if any([n_fvg, n_sr, n_bos, n_ob, n_liq]):
+                parts = []
+                if n_fvg: parts.append(f"FVG×{n_fvg}")
+                if n_ob:  parts.append(f"OB×{n_ob}")
+                if n_sr:  parts.append(f"S/R×{n_sr}")
+                if n_bos: parts.append(f"BOS×{n_bos}")
+                if n_liq: parts.append(f"Liq×{n_liq}")
+                header += f" | {' '.join(parts)}"
+
+            reply_text = f"{header}\n\n{analysis_text}"
+
+            # Предупреждение о бюджете
+            warning = cost_manager.get_cost_warning()
+            if warning:
+                reply_text += f"\n\n{warning}"
+
+            # 5. Отправляем: аннотированное изображение (если есть) + текст
+            if annotated_bytes:
+                await update.message.reply_photo(
+                    photo   = InputFile(io.BytesIO(annotated_bytes), filename="analysis.jpg"),
+                    caption = reply_text,
+                    parse_mode = "Markdown",
+                )
+            else:
+                # Нет рисунков — шлём только текст
+                await update.message.reply_text(reply_text, parse_mode="Markdown")
+
+            # 6. Сохраняем в БД
+            patterns_summary = ", ".join(
+                p.pattern_name for p in result.get("patterns", [])
+            ) or "none"
+            self._save_message(user_id, "user",      f"[Chart] {caption or 'no caption'}")
+            self._save_message(user_id, "assistant", reply_text[:500])
+            self._increment_user_messages(user_id)
 
         except Exception as e:
             print(f"❌ Photo error: {e}")

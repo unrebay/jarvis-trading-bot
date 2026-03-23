@@ -2,6 +2,12 @@
 JARVIS - Trading Education Bot
 Professional AI teacher for trading education (ICT/SMC)
 
+v2.3 — Visual chart analysis:
+- ChartAnnotator: Claude Vision detects FVG, OB, BOS, CHoCH, S/R
+- ChartDrawer: PIL draws annotations on chart image
+- Returns annotated image + text analysis to Telegram user
+- /analyze command added
+
 v2.2 — Fixed architecture:
 - Single ClaudeClient (no double Anthropic instantiation)
 - Clean dependency injection chain
@@ -64,15 +70,20 @@ class JarvisBot:
             MessageHandler(filters.PHOTO, handler.handle_photo)
         )
         self.application.add_handler(
+            # /analyze with attached photo (caption command)
+            MessageHandler(filters.PHOTO & filters.CaptionRegex(r'^/analyze'), handler.handle_photo)
+        )
+        self.application.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_message)
         )
 
     def run(self):
         """Start bot polling."""
-        print("🤖 JARVIS Bot v2.2 starting...")
-        print("   ├─ Claude:    ClaudeClient (Haiku default, cache ON)")
+        print("🤖 JARVIS Bot v2.3 starting...")
+        print("   ├─ Claude:    ClaudeClient (Haiku text / Opus vision, cache ON)")
         print("   ├─ RAG:       Supabase keyword search (61 lessons)")
         print("   ├─ Budget:    CostManager ($1.00/day, FULL→LITE→OFFLINE)")
+        print("   ├─ Vision:    ChartAnnotator + ChartDrawer (FVG, OB, BOS, S/R)")
         print("   ├─ Supabase:  conversations + users")
         print("   └─ Telegram:  polling mode")
         self.application.run_polling(drop_pending_updates=True)

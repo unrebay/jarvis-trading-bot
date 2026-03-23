@@ -1,20 +1,28 @@
 """
-Chart Annotator Module - Specialized chart analysis and annotation
+Chart Annotator Module — ICT/SMC chart analysis + drawing instructions
 
-Handles:
-- Chart image analysis (patterns, levels, structures)
-- Geometric annotation generation
-- ICT pattern detection (Judas Swings, BOS, etc.)
-- Key level identification and strength assessment
-- Confluence analysis
-- JSON annotation output
+Workflow:
+1. Receive chart image bytes + optional context
+2. Send to Claude Vision with an ICT/SMC-focused prompt
+3. Parse JSON response:
+   - patterns_detected  (Judas Swing, BOS, CHoCH, OB, FVG …)
+   - key_levels         (support / resistance / order blocks)
+   - drawing_instructions → passed to ChartDrawer for visual overlay
+4. Return structured result dict
+
+Changes v2 (iMac):
+- Added drawing_instructions block (normalized 0-1 coordinates)
+- FVG, OB, BOS/CHoCH, S/R, liquidity sweeps
+- Improved system prompt (more ICT vocabulary)
+- Cleaner response parsing with safer JSON extraction
+- Media type auto-detect (JPEG / PNG)
 """
 
 import json
 import base64
 from datetime import datetime
 from typing import Optional, Dict, List, Any
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from io import BytesIO
 
 from PIL import Image
@@ -22,12 +30,13 @@ from PIL import Image
 from .claude_client import ClaudeClient
 
 
+# ─── Data Classes ────────────────────────────────────────────────────────────
+
 @dataclass
 class KeyLevel:
-    """Key support/resistance level"""
     level: float
-    type: str  # "support" or "resistance"
-    strength: str  # "strong", "medium", "weak"
+    type: str           # "support" | "resistance" | "order_block_bull" | "order_block_bear"
+    strength: str       # "strong" | "medium" | "weak"
     test_count: int = 0
     factors: List[str] = None
     confidence: float = 0.8
@@ -35,140 +44,102 @@ class KeyLevel:
 
 @dataclass
 class DetectedPattern:
-    """Detected trading pattern"""
     pattern_name: str
     pattern_id: str
     confidence: float
     description: str
-    location: Dict[str, Any]  # start candle, end candle, price levels
+    location: Dict[str, Any]
     entry_setup: Optional[Dict[str, Any]] = None
-    significance: str = "medium"  # high, medium, low
+    significance: str = "medium"   # "high" | "medium" | "low"
 
 
-@dataclass
-class GeometricAnnotation:
-    """Geometric annotation on chart"""
-    id: str
-    type: str  # point, rectangle, line, arrow, circle
-    coordinates: List[List[float]]
-    label: str
-    color: str
-    description: str = ""
-
+# ─── ChartAnnotator ──────────────────────────────────────────────────────────
 
 class ChartAnnotator:
     """
-    Specialized chart analysis and annotation
+    Analyze a trading chart image with Claude Vision.
 
-    Workflow:
-    1. Receive chart image and context
-    2. Extract chart info (instrument, timeframe, price range)
-    3. Detect patterns (Judas Swing, BOS, structure)
-    4. Identify key levels (support, resistance, liquidity)
-    5. Analyze confluence (multiple reasons at same level)
-    6. Generate geometric annotations
-    7. Output structured annotation JSON
+    Returns both a structured analysis AND drawing instructions
+    (normalized 0-1 coordinates) that ChartDrawer can render.
     """
 
-    def __init__(self, claude_client: ClaudeClient):
-        """
-        Initialize chart annotator
+    VISION_MODEL = "claude-opus-4-6"
 
-        Args:
-            claude_client: ClaudeClient instance
-        """
+    def __init__(self, claude_client: ClaudeClient):
         self.claude = claude_client
+
+    # ─── Public ───────────────────────────────────────────────────────────────
 
     def analyze_chart(
         self,
         image_data: bytes,
-        context: Dict[str, str] = None
+        context: Dict[str, str] = None,
     ) -> Dict[str, Any]:
         """
-        Analyze chart and generate annotations
+        Analyze chart and return full result including drawing instructions.
 
         Args:
-            image_data: Chart image bytes
-            context: Context (instrument, timeframe, etc)
+            image_data: raw image bytes (JPEG or PNG)
+            context:    optional dict with keys instrument, timeframe, etc.
 
         Returns:
-            Dict with patterns, levels, and annotations
+            {
+              "success": bool,
+              "chart_info": {...},
+              "patterns": [DetectedPattern, ...],
+              "key_levels": [KeyLevel, ...],
+              "drawing_instructions": {...},   ← for ChartDrawer
+              "analysis_text": "...",          ← narrative for Telegram reply
+              "error": "..." (only on failure)
+            }
         """
         context = context or {}
-
-        # Get chart info
         chart_info = self._extract_chart_info(context)
 
-        # Analyze with vision
-        analysis = self._analyze_patterns_and_levels(image_data, chart_info)
-        if not analysis.get("success"):
-            return analysis
-
-        patterns = analysis["patterns"]
-        levels = analysis["levels"]
-
-        # Generate geometric annotations
-        annotations = self._generate_annotations(patterns, levels, chart_info)
-
-        # Analyze confluence
-        confluence = self._analyze_confluence(levels)
+        result = self._call_claude_vision(image_data, chart_info)
+        if not result.get("success"):
+            return result
 
         return {
             "success": True,
             "chart_info": chart_info,
-            "patterns": patterns,
-            "key_levels": levels,
-            "annotations": annotations,
-            "confluence": confluence,
-            "annotation_json": self._build_annotation_json(
-                chart_info, patterns, levels, annotations, confluence
-            )
+            "patterns": result["patterns"],
+            "key_levels": result["key_levels"],
+            "drawing_instructions": result["drawing_instructions"],
+            "analysis_text": result["analysis_text"],
+            "raw_response": result.get("raw_response", ""),
         }
+
+    # ─── Private ──────────────────────────────────────────────────────────────
 
     def _extract_chart_info(self, context: Dict[str, str]) -> Dict[str, Any]:
-        """
-        Extract chart metadata from context
-
-        Args:
-            context: Context dict
-
-        Returns:
-            Chart info
-        """
         return {
             "instrument": context.get("instrument", "Unknown"),
-            "timeframe": context.get("timeframe", "Unknown"),
-            "date_range": context.get("date_range", "Unknown"),
-            "price_range": context.get("price_range", [0, 0]),
-            "session": context.get("session", "Unknown")
+            "timeframe":  context.get("timeframe",  "Unknown"),
+            "session":    context.get("session",    "Unknown"),
         }
 
-    def _analyze_patterns_and_levels(
+    def _call_claude_vision(
         self,
         image_data: bytes,
-        chart_info: Dict[str, Any]
+        chart_info: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """
-        Analyze chart for patterns and levels
-
-        Args:
-            image_data: Chart image bytes
-            chart_info: Chart metadata
-
-        Returns:
-            Dict with patterns and levels
-        """
+        """Send image + prompt to Claude, parse structured JSON response."""
         try:
-            # Encode image
-            image_base64 = base64.standard_b64encode(image_data).decode("utf-8")
+            # Detect media type
+            try:
+                img = Image.open(BytesIO(image_data))
+                fmt = (img.format or "JPEG").upper()
+                media_type = "image/png" if fmt == "PNG" else "image/jpeg"
+            except Exception:
+                media_type = "image/jpeg"
 
-            # Build prompt
-            prompt = self._build_analysis_prompt(chart_info)
+            image_b64 = base64.standard_b64encode(image_data).decode("utf-8")
+            prompt    = self._build_prompt(chart_info)
 
-            # Call Claude
             response = self.claude.client.messages.create(
-                model="claude-opus-4-6",
-                max_tokens=4000,
+                model=self.VISION_MODEL,
+                max_tokens=4096,
                 messages=[
                     {
                         "role": "user",
@@ -176,278 +147,237 @@ class ChartAnnotator:
                             {
                                 "type": "image",
                                 "source": {
-                                    "type": "base64",
-                                    "media_type": "image/jpeg",
-                                    "data": image_base64
-                                }
+                                    "type":       "base64",
+                                    "media_type": media_type,
+                                    "data":       image_b64,
+                                },
                             },
-                            {
-                                "type": "text",
-                                "text": prompt
-                            }
-                        ]
+                            {"type": "text", "text": prompt},
+                        ],
                     }
-                ]
+                ],
             )
 
-            # Parse response
-            response_text = response.content[0].text
+            raw = response.content[0].text
+            data = self._extract_json(raw)
 
-            try:
-                json_start = response_text.find('{')
-                json_end = response_text.rfind('}') + 1
-                if json_start >= 0 and json_end > json_start:
-                    data = json.loads(response_text[json_start:json_end])
-                else:
-                    data = {}
-            except json.JSONDecodeError:
-                data = {}
-
-            # Parse patterns
-            patterns = []
-            for p in data.get("patterns_detected", []):
-                patterns.append(DetectedPattern(
-                    pattern_name=p.get("pattern_name", "Unknown"),
-                    pattern_id=p.get("pattern_id", "unknown"),
-                    confidence=p.get("confidence", 0.0),
-                    description=p.get("description", ""),
-                    location=p.get("location", {}),
-                    entry_setup=p.get("entry_setup"),
-                    significance=p.get("significance", "medium")
-                ))
-
-            # Parse levels
-            levels = []
-            for level_data in data.get("key_levels", []):
-                levels.append(KeyLevel(
-                    level=level_data.get("level", 0.0),
-                    type=level_data.get("type", "unknown"),
-                    strength=level_data.get("strength", "medium"),
-                    test_count=level_data.get("test_count", 0),
-                    factors=level_data.get("factors", []),
-                    confidence=level_data.get("confidence", 0.7)
-                ))
+            patterns = self._parse_patterns(data.get("patterns_detected", []))
+            levels   = self._parse_levels(data.get("key_levels", []))
+            drawing  = data.get("drawing_instructions", {})
+            analysis_text = self._build_analysis_text(data, patterns, levels)
 
             return {
-                "success": True,
-                "patterns": patterns,
-                "levels": levels,
-                "raw_response": response_text
+                "success":              True,
+                "patterns":             patterns,
+                "key_levels":           levels,
+                "drawing_instructions": drawing,
+                "analysis_text":        analysis_text,
+                "raw_response":         raw,
             }
 
-        except Exception as e:
-            return {
-                "success": False,
-                "error": f"Pattern/level analysis failed: {str(e)}"
-            }
+        except Exception as exc:
+            return {"success": False, "error": f"Vision analysis failed: {exc}"}
 
-    def _build_analysis_prompt(self, chart_info: Dict[str, Any]) -> str:
-        """
-        Build analysis prompt for Claude
+    # ─── Prompt Builder ───────────────────────────────────────────────────────
 
-        Args:
-            chart_info: Chart metadata
+    def _build_prompt(self, chart_info: Dict[str, Any]) -> str:
+        return f"""You are an expert ICT/SMC trading analyst. Analyze this chart image carefully.
 
-        Returns:
-            Prompt text
-        """
-        return f"""Analyze this trading chart in detail. Return structured JSON with:
+Chart context:
+- Instrument : {chart_info.get('instrument', 'Unknown')}
+- Timeframe  : {chart_info.get('timeframe',  'Unknown')}
+- Session    : {chart_info.get('session',    'Unknown')}
 
-Chart Context:
-- Instrument: {chart_info.get('instrument')}
-- Timeframe: {chart_info.get('timeframe')}
-- Price Range: {chart_info.get('price_range')}
+=== WHAT TO IDENTIFY ===
 
-Look for these ICT patterns:
-1. Judas Swing (liquidity sweep + reversal)
-2. Break of Structure (strong directional break)
-3. Market Structure (HH/HL or LL/LH)
-4. Liquidity Grabs
-5. Volume Confirmation
+1. ICT / SMC PATTERNS
+   • FVG (Fair Value Gaps) — imbalance zones between candles
+   • Order Blocks (OB) — last up/down candle before strong move
+   • BOS (Break of Structure) — higher high or lower low break
+   • CHoCH (Change of Character) — first counter-trend BOS
+   • Judas Swing — liquidity sweep before real move
+   • Liquidity sweeps — stop-hunt above/below swing highs/lows
 
-Return JSON:
+2. KEY LEVELS — strong S/R, POI zones, previous highs/lows
+
+3. MARKET BIAS — overall trend direction and next likely move
+
+=== OUTPUT FORMAT ===
+
+Return ONLY valid JSON (no markdown, no extra text):
+
 {{
   "patterns_detected": [
     {{
-      "pattern_name": "Judas Swing",
-      "pattern_id": "pattern_judas_swing",
-      "confidence": 0.92,
-      "description": "Clear Judas swing with liquidity grab below support",
-      "location": {{
-        "start_candle": 10,
-        "end_candle": 22,
-        "swing_low": 1.0825,
-        "reversal_high": 1.0950
-      }},
+      "pattern_name": "FVG",
+      "pattern_id": "fvg_1",
+      "type": "bullish",
+      "confidence": 0.88,
+      "description": "Bullish FVG formed after strong up-move",
       "significance": "high",
       "entry_setup": {{
-        "trigger": "Retest of broken support at 1.0850",
-        "risk_level": 1.0825,
-        "target": 1.1050,
-        "risk_reward": 3.0
+        "trigger": "Price retraces into FVG",
+        "risk_level": 2045.0,
+        "target": 2095.0,
+        "risk_reward": 2.5
       }}
     }}
   ],
   "key_levels": [
     {{
-      "level": 1.0850,
+      "level": 2050.0,
       "type": "support",
       "strength": "strong",
       "test_count": 3,
-      "factors": ["multiple_tests", "volume_confirmation", "previous_support"],
-      "confidence": 0.95,
-      "description": "Strong support held 3x with volume"
+      "factors": ["multiple_tests", "order_block", "fvg_overlap"],
+      "confidence": 0.92
     }}
-  ]
-}}"""
+  ],
+  "market_bias": "bullish",
+  "analysis_summary": "2-3 sentences describing the overall picture and trade idea.",
+  "drawing_instructions": {{
+    "fvg_zones": [
+      {{
+        "x1_pct": 0.55, "x2_pct": 0.75,
+        "y1_pct": 0.38, "y2_pct": 0.45,
+        "type": "bullish",
+        "label": "FVG"
+      }}
+    ],
+    "order_blocks": [
+      {{
+        "x1_pct": 0.40, "x2_pct": 0.55,
+        "y1_pct": 0.50, "y2_pct": 0.58,
+        "type": "bullish",
+        "label": "OB"
+      }}
+    ],
+    "sr_levels": [
+      {{
+        "y_pct": 0.45,
+        "label": "S 2050.0",
+        "level_type": "support"
+      }}
+    ],
+    "bos_markers": [
+      {{
+        "x_pct": 0.62, "y_pct": 0.35,
+        "direction": "up",
+        "label": "BOS"
+      }}
+    ],
+    "liquidity_sweeps": [
+      {{
+        "x_pct": 0.48, "y_pct": 0.22,
+        "label": "BSL grabbed"
+      }}
+    ],
+    "summary": "Bullish structure with FVG at 2050. OB confluence. Expect continuation."
+  }}
+}}
 
-    def _generate_annotations(
-        self,
-        patterns: List[DetectedPattern],
-        levels: List[KeyLevel],
-        chart_info: Dict[str, Any]
-    ) -> List[GeometricAnnotation]:
-        """
-        Generate geometric annotations
+COORDINATE RULES:
+- All _pct values are 0.0 (left/top) to 1.0 (right/bottom) of the CHART AREA (not the whole image)
+- y_pct 0.0 = TOP of chart (highest price), y_pct 1.0 = BOTTOM (lowest price)
+- x_pct 0.0 = leftmost candle, x_pct 1.0 = rightmost candle
+- For rectangles: y1_pct is the UPPER edge (higher price), y2_pct is LOWER edge (lower price)
+- Include ONLY elements you can actually see in the chart
+- If a section has no elements, use an empty array []
+"""
 
-        Args:
-            patterns: Detected patterns
-            levels: Key levels
-            chart_info: Chart metadata
+    # ─── JSON Parsing Helpers ─────────────────────────────────────────────────
 
-        Returns:
-            List of annotations
-        """
-        annotations = []
-        ann_id = 0
+    @staticmethod
+    def _extract_json(text: str) -> Dict[str, Any]:
+        """Extract first complete JSON object from Claude response text."""
+        depth = 0
+        start = -1
+        for i, ch in enumerate(text):
+            if ch == "{":
+                if depth == 0:
+                    start = i
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0 and start >= 0:
+                    try:
+                        return json.loads(text[start: i + 1])
+                    except json.JSONDecodeError:
+                        pass
+        return {}
 
-        # Add level annotations
-        for level in levels:
-            color = "#FF0000" if level.type == "resistance" else "#00FF00"
-            ann_id += 1
-            annotations.append(GeometricAnnotation(
-                id=f"ann_{ann_id}",
-                type="horizontal_line",
-                coordinates=[[0, level.level], [1000, level.level]],
-                label=f"{level.type.title()} {level.level}",
-                color=color,
-                description=f"{level.strength.title()} {level.type}, tested {level.test_count}x"
+    @staticmethod
+    def _parse_patterns(raw: List[Dict]) -> List[DetectedPattern]:
+        patterns = []
+        for p in raw:
+            if not p.get("pattern_name"):
+                continue
+            patterns.append(DetectedPattern(
+                pattern_name = p.get("pattern_name", "Unknown"),
+                pattern_id   = p.get("pattern_id",   "unknown"),
+                confidence   = float(p.get("confidence", 0.0)),
+                description  = p.get("description",  ""),
+                location     = p.get("location",     {}),
+                entry_setup  = p.get("entry_setup"),
+                significance = p.get("significance", "medium"),
             ))
+        return patterns
 
-        # Add pattern annotations
-        for pattern in patterns:
-            if pattern.pattern_id == "pattern_judas_swing":
-                ann_id += 1
-                # Mark the liquidity grab
-                annotations.append(GeometricAnnotation(
-                    id=f"ann_{ann_id}",
-                    type="rectangle",
-                    coordinates=[
-                        [pattern.location.get("start_candle", 0), pattern.location.get("swing_low", 0)],
-                        [pattern.location.get("end_candle", 0), pattern.location.get("swing_low", 0)]
-                    ],
-                    label="Judas Swing",
-                    color="#FF00FF",
-                    description=f"Pattern confidence: {pattern.confidence:.0%}"
-                ))
+    @staticmethod
+    def _parse_levels(raw: List[Dict]) -> List[KeyLevel]:
+        levels = []
+        for l in raw:
+            levels.append(KeyLevel(
+                level      = float(l.get("level", 0.0)),
+                type       = l.get("type",       "unknown"),
+                strength   = l.get("strength",   "medium"),
+                test_count = int(l.get("test_count", 0)),
+                factors    = l.get("factors",    []),
+                confidence = float(l.get("confidence", 0.7)),
+            ))
+        return levels
 
-        return annotations
+    # ─── Analysis Text Builder ────────────────────────────────────────────────
 
-    def _analyze_confluence(self, levels: List[KeyLevel]) -> Dict[str, Any]:
-        """
-        Analyze confluence at key levels
-
-        Args:
-            levels: Key levels
-
-        Returns:
-            Confluence analysis
-        """
-        confluence_zones = []
-
-        for level in levels:
-            if level.strength == "strong":
-                confluence_zones.append({
-                    "level": level.level,
-                    "type": level.type,
-                    "strength": level.strength,
-                    "factors": level.factors,
-                    "confluence_score": len(level.factors or []) / 5 * 100,
-                    "trading_probability": 0.80 + (len(level.factors or []) * 0.05)
-                })
-
-        return {
-            "strong_confluence_zones": confluence_zones,
-            "best_level": max(
-                confluence_zones,
-                key=lambda x: x["trading_probability"]
-            ) if confluence_zones else None
-        }
-
-    def _build_annotation_json(
-        self,
-        chart_info: Dict[str, Any],
+    @staticmethod
+    def _build_analysis_text(
+        data:     Dict[str, Any],
         patterns: List[DetectedPattern],
-        levels: List[KeyLevel],
-        annotations: List[GeometricAnnotation],
-        confluence: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """
-        Build final annotation JSON structure
+        levels:   List[KeyLevel],
+    ) -> str:
+        """Build a concise Telegram-ready analysis narrative."""
+        bias    = data.get("market_bias", "").capitalize()
+        summary = data.get("analysis_summary", "")
 
-        Args:
-            chart_info: Chart metadata
-            patterns: Detected patterns
-            levels: Key levels
-            annotations: Geometric annotations
-            confluence: Confluence analysis
+        lines = []
 
-        Returns:
-            Complete annotation JSON
-        """
-        return {
-            "image_id": "image_unknown",
-            "chart_info": chart_info,
-            "patterns_detected": [
-                {
-                    "pattern_name": p.pattern_name,
-                    "pattern_id": p.pattern_id,
-                    "confidence": p.confidence,
-                    "description": p.description,
-                    "location": p.location,
-                    "significance": p.significance,
-                    "entry_setup": p.entry_setup
-                }
-                for p in patterns
-            ],
-            "key_levels": [
-                {
-                    "level": l.level,
-                    "type": l.type,
-                    "strength": l.strength,
-                    "test_count": l.test_count,
-                    "factors": l.factors or [],
-                    "confidence": l.confidence
-                }
-                for l in levels
-            ],
-            "geometric_annotations": [
-                {
-                    "id": a.id,
-                    "type": a.type,
-                    "coordinates": a.coordinates,
-                    "label": a.label,
-                    "color": a.color,
-                    "description": a.description
-                }
-                for a in annotations
-            ],
-            "confluence": confluence,
-            "annotations_summary": {
-                "total_patterns": len(patterns),
-                "total_levels": len(levels),
-                "total_annotations": len(annotations),
-                "analysis_completeness": "high" if len(patterns) + len(levels) > 3 else "medium",
-                "generated_at": datetime.now().isoformat()
-            }
-        }
+        if bias:
+            emoji = "🟢" if bias.lower() == "bullish" else ("🔴" if bias.lower() == "bearish" else "⚪")
+            lines.append(f"{emoji} *Bias:* {bias}")
+
+        if patterns:
+            lines.append("\n*Detected Patterns:*")
+            for p in patterns[:5]:
+                conf_bar = "▓" * int(p.confidence * 5) + "░" * (5 - int(p.confidence * 5))
+                lines.append(
+                    f"  • *{p.pattern_name}* [{conf_bar}] {int(p.confidence*100)}%"
+                )
+                if p.description:
+                    lines.append(f"    _{p.description}_")
+                if p.entry_setup:
+                    es = p.entry_setup
+                    if es.get("risk_reward"):
+                        lines.append(f"    RR: {es['risk_reward']:.1f}x")
+
+        if levels:
+            strong = [l for l in levels if l.strength == "strong"]
+            if strong:
+                lines.append("\n*Key Levels:*")
+                for l in strong[:4]:
+                    emoji = "🟩" if l.type == "support" else "🟥"
+                    lines.append(f"  {emoji} {l.type.upper()}: {l.level}")
+
+        if summary:
+            lines.append(f"\n💡 _{summary}_")
+
+        return "\n".join(lines) if lines else "Analysis complete — see annotated chart."
