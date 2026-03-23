@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Term",
+  "description": "Trading glossary term",
+  "type": "object",
+  "required": ["id", "term", "definition"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^term_[a-z0-9_]+$"
+    },
+    "term": {
+      "type": "string",
+      "description": "The term itself"
+    },
+    "definition": {
+      "type": "string",
+      "description": "Clear definition"
+    },
+    "context": {
+      "type": "string",
+      "enum": ["ICT", "price-action", "risk-management", "general"],
+      "description": "Context where this term is used"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Alternative names"
+    },
+    "related_terms": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^term_[a-z0-9_]+$"}
+    },
+    "related_lessons": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^lesson_[a-z0-9_]+$"}
+    },
+    "example_usage": {
+      "type": "string",
+      "description": "Example sentence"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

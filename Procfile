@@ -1,1 +1,1 @@
-worker: python jarvis_bot.py
+worker: python -m src.bot.main

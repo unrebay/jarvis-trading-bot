@@ -1,0 +1,24 @@
+{
+  "id": "lesson_principles_fair_value_gap_fvg",
+  "title": "Fair Value Gap (FVG) — Ценовой Дисбаланс",
+  "description": "Lesson on Fair Value Gap (FVG) — Ценовой Дисбаланс",
+  "category": "principles",
+  "level": "intermediate",
+  "content": "# Fair Value Gap (FVG) — Ценовой Дисбаланс\n\n## Определение\n\n**Imbalance / FVG (Fair Value Gap)** — это ценовой дисбаланс. Диапазон на графике, где было заложено мало ликвидности.\n\nImbalance подразумевает сильное импульсное движение свечи, которое цена почти **всегда возвращается перекрывать**.\n\n**Аналогия**: представьте, что красите стену валиком. Провели сверху вниз — остались пустоты. Теперь нужно провести снизу вверх — заполнить пустоты. Аналогичный принцип с имбалансом.\n\n## Как правильно отмечать FVG?\n\nНужно найти **три свечи**, одна из которых будет импульсная. Используя инструмент «Коррекция по Фибоначчи» натягиваем **от фитиля первой свечи до фитиля последней**.\n\nFVG = диапазон между хвостом (фитилем) первой и третьей свечи, где тело второй свечи создало дисбаланс.\n\n## Типы перекрытия\n\n- **Full Fill** — полное перекрытие (100%)\n- **50% / C.E (Consequent Encroachment)** — перекрытие до 50% — наиболее частый вариант\n- **IOFED** — минимальное перекрытие (1%+), указывает на начало ребалансировки\n\n## Применение\n\nImbalance (FVG) используется:\n- **Для определения контекста** — на старшем ТФ выступает как зона интереса (POI)\n- **В модели для входа** — ищем реакцию цены при касании зоны FVG\n- Внутри FVG на старшем ТФ можно искать факторы для набора позиции на младшем\n\n## SIBI / BISI\n\n- **BISI** = Buyside Imbalance SellSide Inefficiency — FVG при апмуве (бычий FVG)\n- **SIBI** = Sellside Imbalance BuySide Inefficiency — FVG при даун-муве (медвежий FVG)\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.579884",
+  "updated_at": "2026-03-22T22:05:44.579887",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "principles"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/principles/fair-value-gap.md",
+  "file_hash": "bd31e1e7ba3d",
+  "status": "active"
+}

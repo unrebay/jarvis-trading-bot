@@ -1,0 +1,24 @@
+{
+  "id": "lesson_gold-mechanics_reverse_before_target_gold",
+  "title": "Reverse Before Target (Разворот до таргета — Gold)",
+  "description": "Lesson on Reverse Before Target (Разворот до таргета — Gold)",
+  "category": "gold-mechanics",
+  "level": "advanced",
+  "content": "# Reverse Before Target (Разворот до таргета — Gold)\n\n## Проблема\n\nХорошо знакома ситуация, когда цена **не доходит до намеченных таргетов** и разворачивается. Это особенно характерно для Gold из-за высокой волатильности.\n\n## Основные причины\n\n1. Наличие **крупных ордеров и ликвидности** на определённых уровнях\n2. **Высокая волатильность** Gold → резкие развороты\n3. Поведение **институциональных трейдеров** → сложные ценовые структуры\n4. Специфика Gold — ключевую роль играют **крупные банки и финансовые институты**\n\n## Решение\n\n**Размещать Take-Profit чуть ниже намеченного таргета**, если нет уверенности в полном достижении цели. Это хорошо работает на дистанции.\n\nПример: цена разворачивается от 4H FF раньше, чем достигает фрактала → TP на FF сохранит прибыль.\n\n## Применение к Stop-Loss\n\nТа же логика применима к стопам: **устанавливать с небольшим запасом** на случай проскальзывания или спреда, который многие трейдеры не учитывают.\n\n## Вывод\n\nПри работе с Gold всегда учитывать возможность разворота **раньше ключевого таргета** и корректировать управление позицией соответственно.\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.568234",
+  "updated_at": "2026-03-22T22:05:44.568239",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "gold-mechanics"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/gold-mechanics/reverse-before-target.md",
+  "file_hash": "5ff61fc61836",
+  "status": "active"
+}

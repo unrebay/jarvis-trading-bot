@@ -1,0 +1,40 @@
+# Pattern to Rule relationships
+# Maps which rules apply to which patterns
+
+relationships:
+  - pattern_id: pattern_judas_swing
+    rule_ids:
+      - rule_never_trade_against_structure
+      - rule_wait_for_confirmation
+      - rule_risk_reward_minimum
+    description: "Judas swings follow specific rules about structure and confirmation"
+
+  - pattern_id: pattern_break_of_structure
+    rule_ids:
+      - rule_breakeven_stop
+      - rule_follow_momentum
+      - rule_risk_management_percentage
+    description: "BOS trading must follow strict risk and exit rules"
+
+  - pattern_id: pattern_market_structure
+    rule_ids:
+      - rule_never_trade_against_structure
+      - rule_higher_timeframe_confirmation
+    description: "Structure identification follows macro/micro rules"
+
+  - pattern_id: pattern_london_open
+    rule_ids:
+      - rule_session_awareness
+      - rule_high_volume_confirmation
+    description: "Session-based patterns follow time-zone rules"
+
+  - pattern_id: pattern_supply_demand
+    rule_ids:
+      - rule_confluence_requirement
+      - rule_volume_confirmation
+    description: "Supply/demand levels require specific confirmation rules"
+
+# Metadata
+version: "1.0"
+created_at: "2026-03-22"
+last_updated: "2026-03-22"

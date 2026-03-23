@@ -1,0 +1,26 @@
+{
+  "id": "lesson_market-mechanics_asia_low_high_london_low_h",
+  "title": "Asia Low/High, London Low/High Reversal",
+  "description": "Lesson on Asia Low/High, London Low/High Reversal",
+  "category": "market-mechanics",
+  "level": "intermediate",
+  "content": "# Asia Low/High, London Low/High Reversal\n\n## Определение\n\nМодель работы на **разворот от экстремумов Азиатской или Лондонской сессии** после их снятия.\n\n## Правила входа\n\n1. **Asia/London в консолидации** — диапазон сессии был боковым\n2. **Отсутствие OF** — нет выраженного потока приказов\n3. **BOS по всем пунктам валидации** — сразу после снятия ликвидности\n4. **Отсутствие ликвидности за Азиатским/Лондонским min/max** — за уровнем не должно быть крупных пулов\n\n## Процесс входа\n\n1. Убедиться в ситуации на **старшем таймфрейме**\n2. Дождаться **снятия ликвидности** (sweep of Asia/London High or Low)\n3. Дождаться **слома рыночной структуры (BOS)**\n4. Входить после подтверждения\n\n## Важные ограничения\n\n- **Не тянуть позицию до max/min если он выглядит как сильная зона**\n- Если цена подходит к max/min прошлой сессии **потоком приказов** — вход в позицию на разворот пропускается\n- Разворотная модель работает только при отсутствии OF, не против него\n",
+  "learning_objectives": [
+    "Модель работы на **разворот от экстремумов Азиатской или Лондонской сессии** после их снятия."
+  ],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.524699",
+  "updated_at": "2026-03-22T22:05:44.524702",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "market-mechanics"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/market-mechanics/asia-london-reversal.md",
+  "file_hash": "fac3d47c6a2f",
+  "status": "active"
+}

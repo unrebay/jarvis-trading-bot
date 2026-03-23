@@ -4,6 +4,6 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "python jarvis_bot.py"
+    "startCommand": "python -m src.bot.main"
   }
 }

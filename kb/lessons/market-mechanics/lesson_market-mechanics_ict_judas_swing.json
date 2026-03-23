@@ -1,0 +1,24 @@
+{
+  "id": "lesson_market-mechanics_ict_judas_swing",
+  "title": "ICT JUDAS SWING",
+  "description": "Lesson on ICT JUDAS SWING",
+  "category": "market-mechanics",
+  "level": "intermediate",
+  "content": "# ICT JUDAS SWING\n\n## Определение\n\nJudas Swing — это ложное свинг-движение, направленное в противоположную сторону от истинного движения дня. Цель: запутать других участников рынка относительно настоящего намерения цены.\n\n## Правила\n\n1. Азиатская сессия должна быть **боковой** (флэт)\n2. Свинг формируется с **00:00 по 05:00 NY timezone**\n3. Свинг должен быть **большим, полноценным движением** (не мелким тычком)\n4. Перед началом Judas Swing цена должна сделать **манипуляцию над AH/AL** (Asian High/Asian Low)\n\n## Алгоритм определения Judas Swing\n\n1. **Определить BIAS на день** — Judas Swing будет противоположного направления\n2. **Дождаться манипуляции над AH/AL** (противоположной к Judas Swing)\n3. Начало свинг-движения\n4. Движение после NYM (New York Midnight = 00:00 NY) и до конца формирования = это и есть Judas Swing\n\n## Что даёт Judas Swing\n\nJudas Swing формирует **лой или хай дня**, в зависимости от BIAS:\n- Если BIAS бычий → Judas Swing идёт вниз (формирует лой дня) → потом разворот вверх\n- Если BIAS медвежий → Judas Swing идёт вверх (формирует хай дня) → потом разворот вниз\n\n## Практическое применение\n\nДанный инструмент **не даёт чёткого входа в позицию**, но даёт понимание:\n- Куда движется цена\n- По каким причинам произошло то или иное движение\n\nJudas Swing — это инструмент для чтения контекста рынка и понимания намерений крупных игроков.\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.529799",
+  "updated_at": "2026-03-22T22:05:44.529801",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "market-mechanics"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/market-mechanics/ict-judas-swing.md",
+  "file_hash": "bf64bf5b010f",
+  "status": "active"
+}

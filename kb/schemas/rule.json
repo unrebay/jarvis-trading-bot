@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rule",
+  "description": "Trading rule or principle",
+  "type": "object",
+  "required": ["id", "title", "statement", "category"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^rule_[a-z0-9_]+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 150
+    },
+    "statement": {
+      "type": "string",
+      "description": "The rule itself in clear language"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["risk-management", "market-mechanics", "psychology", "entry", "exit"],
+      "description": "Rule category"
+    },
+    "importance": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "1=nice-to-know, 5=critical"
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Why this rule exists"
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "When this rule might not apply"
+    },
+    "related_lessons": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^lesson_[a-z0-9_]+$"}
+    },
+    "related_patterns": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^pattern_[a-z0-9_]+$"}
+    },
+    "examples": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Real-world examples"
+    },
+    "violations_to_avoid": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Common ways this rule is broken"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

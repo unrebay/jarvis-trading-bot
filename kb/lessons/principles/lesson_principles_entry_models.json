@@ -1,0 +1,24 @@
+{
+  "id": "lesson_principles_entry_models",
+  "title": "Entry Models — Модели входа",
+  "description": "Lesson on Entry Models — Модели входа",
+  "category": "principles",
+  "level": "intermediate",
+  "content": "# Entry Models — Модели входа\n\n## Что такое модель?\n\nМодель — определённая свечная формация или поведение цены, которое подтверждает анализ и указывает на развитие движения в нужном направлении.\n\n- **Разворотная** — сигнализирует о смене рыночного нарратива\n- **Продолжения** — подтверждает текущий нарратив, даёт возможность для повторного входа\n\n## Три основных типа разворотных моделей\n\n### 1. Break of Structure (BOS / CHoCH / Shift)\nПробой структуры (структурной или фрактальной). Рынок пробил предыдущий тренд и задал новое направленное смещение (bias).\n\n### 2. Inversion\nИнверсия элемента Price Action, указывающая на аннулирование предыдущего сценария:\n- **Breaker Block (BB)**\n- **Inversion Fair Value Gap (I-FVG)**\n- **Balance Price Range (BPR)**\n\n### 3. Change In State Delivery (Absorption)\nОдно ценовое движение поглощает другое:\n- **Order Block (OB)** — зона агрессивного поглощения\n- **Propulsion Block (PB)** — двойное подтверждение OB (более сильный вариант)\n\n## Таймфреймы для моделей\n\n- Индексы — M1\n- Валюты (FX) — M3\n- Сырьевые товары — M5\n\n## Quasimodo (QM) vs Failure Swing\n\n**Quasimodo** — паттерн после пробоя структуры с глубоким откатом. Сигнализирует об истощении импульса и готовности к развороту.\n\n**Failure Swing** — неудачная попытка обновить максимум/минимум. Более чистая форма без лишних манипуляций.\n\n## Роль SMT\n\nКогда QM или Failure Swing сопровождается SMT-дивергенцией между коррелирующими активами (ES/NQ или EUR/USD / GBP/USD) — это дополнительное подтверждение разворота. Расхождение в силе между коррелирующими инструментами часто сигнализирует о возможном развороте.\n\n## Важно!\n\nМодели входа — инструменты подтверждения анализа, а не самостоятельные \"волшебные\" сетапы. Главное — сочетать с контекстом, ликвидностью и синхронизацией таймфреймов.\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.578522",
+  "updated_at": "2026-03-22T22:05:44.578524",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "principles"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/principles/entry-models.md",
+  "file_hash": "504b37661a83",
+  "status": "active"
+}

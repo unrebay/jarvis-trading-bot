@@ -1,0 +1,97 @@
+{
+  "category": "market-mechanics",
+  "total_lessons": 15,
+  "lessons": [
+    {
+      "id": "lesson_market-mechanics_1h_of_inside_sessions",
+      "title": "1H OF Inside Sessions (Часовой поток приказов внутри сессий)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_advanced_market_structure",
+      "title": "Advanced Market Structure",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_asia_low_high_london_low_h",
+      "title": "Asia Low/High, London Low/High Reversal",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_dwmy_opens_daily_weekly_mo",
+      "title": "DWMY Opens (Daily/Weekly/Monthly/Yearly Opens)",
+      "level": "intermediate",
+      "reading_time": 2
+    },
+    {
+      "id": "lesson_market-mechanics_",
+      "title": "Франкфурт & Лондон Нарратив",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_ict_judas_swing",
+      "title": "ICT JUDAS SWING",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_intraday_price_templates",
+      "title": "IntraDay Price Templates",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_lunch",
+      "title": "Lunch (Обеденный перерыв)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_po3_amd_sessions_power_of_",
+      "title": "PO3 | AMD + Sessions (Power of 3)",
+      "level": "intermediate",
+      "reading_time": 2
+    },
+    {
+      "id": "lesson_market-mechanics_",
+      "title": "Динамика в сессиях",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_",
+      "title": "Сессии и таймингинг",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_standard_deviation_project",
+      "title": "Standard Deviation Projection (STDV)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_tgif_setup_thank_god_it_s_",
+      "title": "TGIF Setup (Thank God It's Friday)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_theory_of_rtgs_real_time_g",
+      "title": "Theory of RTGS (Real-Time Gross Settlement)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_market-mechanics_weekly_profiles",
+      "title": "Weekly Profiles",
+      "level": "intermediate",
+      "reading_time": 1
+    }
+  ],
+  "created_at": "2026-03-22T22:05:44.627482"
+}

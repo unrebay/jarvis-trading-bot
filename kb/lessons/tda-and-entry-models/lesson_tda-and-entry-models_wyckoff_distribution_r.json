@@ -1,0 +1,24 @@
+{
+  "id": "lesson_tda-and-entry-models_wyckoff_distribution_r",
+  "title": "Wyckoff — Distribution / Re-distribution",
+  "description": "Lesson on Wyckoff — Distribution / Re-distribution",
+  "category": "tda-and-entry-models",
+  "level": "advanced",
+  "content": "# Wyckoff — Distribution / Re-distribution\n\n## Дистрибьюция (Распределение)\n\nЗеркальная схема аккумуляции. В этой фазе крупные игроки продают актив перед трендовым движением вниз.\n\n### Phase A — Торможение роста\n- **PSY** (Preliminary Supply) — предварительное предложение: продажи начинают сопротивляться рынку\n- **BC** (Buying Climax) — кульминация покупок: покупки толпы поглощаются крупными игроками у вершины\n- **AR** (Automatic Rally) — автоматическое ралли (аналогично аккумуляции)\n- **ST** (Secondary Test) — вторичный тест уровня сопротивления\n\n### Phase B — Распределение в диапазоне\n- **SOW** (Sign of Weakness) — признак слабости: сильное движение вниз (может быть выше или ниже AR)\n- Трейдеры думают о развороте и открывают шорты → цена возвращается в диапазон\n- **UT** (Upthrust) — манипуляция у верхней границы\n\n### Phase C — Финальная манипуляция\n- **UTAD** (Upthrust After Distribution) — выход выше диапазона для тестирования спроса перед падением. Создаёт ложное ощущение роста, позволяет крупному игроку заходить в шорт на ликвидности слабых.\n\n### Phase D — Выход из диапазона\n- **LPSY** (Last Point of Supply) — последние уровни сопротивления\n- Агрессивный выход вниз + SOW\n- **BU/LPSY** — откат к уровням сопротивления\n\n### Phase E — Начало нисходящего тренда\nАгрессивный выход из диапазона вниз, откаты краткосрочные.\n\n## Ре-дистрибьюция\n\nВ ходе нисходящего тренда формируется аналогичная фаза, менее значительная по масштабу.\n\n## Важно\n\nUTAD может отсутствовать — если спроса недостаточно, чтобы цена поднялась выше сопротивления. Это не проблема — важен принцип, не точный паттерн.\n\n## Источник\n\n[Distribution/Re-distribution | Notion](https://silk-seahorse-538.notion.site/Distribution-Re-distribution-969a52b5d6e34003b16cf27c4ff9cff6)\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.621916",
+  "updated_at": "2026-03-22T22:05:44.621918",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "tda-and-entry-models"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/tda-and-entry-models/wyckoff-distribution.md",
+  "file_hash": "e0844a49aa42",
+  "status": "active"
+}

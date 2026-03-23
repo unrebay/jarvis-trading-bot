@@ -1,0 +1,152 @@
+# Image Ingestion Configuration
+# Handles chart images, diagrams, and educational graphics
+
+ingestion_settings:
+
+  # Image source directories
+  source_directories:
+    - path: "kb/media/images/raw/"
+      description: "Raw uploaded images"
+      scan_frequency: "hourly"
+
+    - path: "kb/media/charts/raw/"
+      description: "Raw chart screenshots"
+      scan_frequency: "hourly"
+
+  # File handling
+  file_handling:
+    supported_formats:
+      - ".png"
+      - ".jpg"
+      - ".jpeg"
+      - ".gif"
+      - ".webp"
+    max_file_size_mb: 25
+    min_resolution_px: 400  # width
+    quality_check: true
+
+  # Image processing
+  processing:
+    resize_enabled: true
+    resize_max_width: 2400
+    resize_max_height: 2400
+    compression:
+      enabled: true
+      quality: 85
+      format: "webp"  # Output format for storage
+
+    optimization:
+      enabled: true
+      remove_metadata: false  # Keep EXIF for date
+      auto_orient: true
+
+    enhancement:
+      auto_contrast: true
+      auto_levels: true
+      noise_reduction: false  # Charts need precision
+
+  # Vision analysis
+  vision_analysis:
+    enabled: true
+    use_claude_vision: true
+    model: "claude-opus-4.6"
+    analyze_content:
+      - pattern_detection: true
+      - text_extraction: true
+      - level_identification: true
+      - annotation_generation: true
+
+  # Entity creation
+  entity_creation:
+    create_image_annotation: true
+    create_chart_example: true
+    auto_categorize: true
+
+  # Annotation generation
+  annotation_generation:
+    strategy: "claude_vision"
+    confidence_threshold: 0.70
+    output_format: "json"
+    include_geometric_annotations: true
+    include_text_annotations: true
+
+  # Deduplication
+  deduplication:
+    enabled: true
+    strategy: "perceptual_hash"  # Detect similar images
+    threshold: 0.85
+    skip_duplicates: true
+
+  # Storage
+  storage:
+    organize_by:
+      - date  # YYYY/MM/DD/
+      - entity_type  # charts, diagrams, etc
+    preserve_original: true
+    original_location: "kb/media/images/archive/"
+    processed_location: "kb/media/images/processed/"
+    thumbnail_generation: true
+    thumbnail_sizes: [100, 200, 400]
+
+  # Metadata
+  metadata:
+    extract_exif: true
+    extract_creation_date: true
+    estimate_dimensions: true
+    calculate_file_hash: true
+
+  # Quality metrics
+  quality_metrics:
+    min_brightness: 30
+    max_brightness: 230
+    aspect_ratio_tolerance: 0.5  # 1:2 to 2:1 acceptable
+    blur_detection: true
+    blur_tolerance: 0.3
+
+  # Linking
+  linking:
+    auto_link_to_lessons: true
+    auto_link_to_patterns: true
+    min_confidence: 0.70
+
+  # Error handling
+  error_handling:
+    on_analysis_failure: "skip_analysis"  # Mark for manual review
+    on_quality_fail: "flag_for_review"
+    quarantine_bad_images: true
+    max_retries: 2
+
+  # Monitoring
+  monitoring:
+    track_success_rate: true
+    track_analysis_time: true
+    alert_on_failures: true
+
+# Vision Analysis Prompts
+vision_prompts:
+  pattern_detection:
+    model: "claude-opus"
+    system_prompt: "image_analyzer.md"
+
+  annotation_generation:
+    model: "claude-opus"
+    system_prompt: "chart_annotator.md"
+
+# Batch Processing
+batch_processing:
+  enabled: true
+  batch_size: 5
+  parallel_processing: true
+  max_parallel_jobs: 3
+  scheduler: "n8n"  # Use n8n for image jobs
+
+# Caching
+caching:
+  enabled: true
+  cache_analyzed_images: true
+  cache_duration_days: 30
+  cache_type: "supabase_storage"
+
+# Version
+version: "1.0"
+created_at: "2026-03-22"
