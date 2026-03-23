@@ -213,7 +213,7 @@ Return ONLY valid JSON (no markdown, no extra text):
       "pattern_id": "fvg_1",
       "type": "bullish",
       "confidence": 0.88,
-      "description": "Bullish FVG formed after strong up-move",
+      "description": "Бычий FVG сформировался после импульсного движения вверх",
       "significance": "high",
       "entry_setup": {{
         "trigger": "Price retraces into FVG",
@@ -234,7 +234,7 @@ Return ONLY valid JSON (no markdown, no extra text):
     }}
   ],
   "market_bias": "bullish",
-  "analysis_summary": "2-3 sentences describing the overall picture and trade idea.",
+  "analysis_summary": "2-3 предложения на РУССКОМ ЯЗЫКЕ — общая картина и торговая идея.",
   "drawing_instructions": {{
     "fvg_zones": [
       {{
@@ -353,19 +353,46 @@ COORDINATE RULES:
         bias    = data.get("market_bias", "").capitalize()
         summary = data.get("analysis_summary", "")
 
+        # Normalize bias: "bearish_short_term_bullish_long_term" → "Медвежий (кратко) / Бычий (долго)"
+        bias_map = {
+            "bullish": "Бычий",
+            "bearish": "Медвежий",
+            "neutral": "Нейтральный",
+        }
+        bias_clean = bias.lower().replace("_", " ")
+        # Try to detect compound bias
+        if "bullish" in bias_clean and "bearish" in bias_clean:
+            if bias_clean.index("bullish") < bias_clean.index("bearish"):
+                bias_display = "Бычий / Медвежий (краткосрочно)"
+            else:
+                bias_display = "Медвежий (краткосрочно) / Бычий (долгосрочно)"
+        else:
+            bias_display = bias_map.get(bias.lower(), bias.replace("_", " ").capitalize())
+
         lines = []
 
         if bias:
-            emoji = "🟢" if bias.lower() == "bullish" else ("🔴" if bias.lower() == "bearish" else "⚪")
-            lines.append(f"{emoji} Bias: {bias}")
+            emoji = "🟢" if "bullish" in bias.lower() and "bearish" not in bias.lower() else \
+                    ("🔴" if "bearish" in bias.lower() and "bullish" not in bias.lower() else "🟡")
+            lines.append(f"{emoji} Направление: {bias_display}")
+
+        PATTERN_RU = {
+            "FVG": "FVG (зона дисбаланса)",
+            "Order Block": "OB (ордер-блок)",
+            "BOS": "BOS (слом структуры)",
+            "CHoCH": "CHoCH (смена характера)",
+            "Judas Swing": "Judas Swing (снос ликвидности)",
+            "Liquidity Sweep": "Sweep ликвидности",
+            "Market Structure": "Рыночная структура",
+        }
 
         if patterns:
-            lines.append("\nDetected Patterns:")
+            lines.append("\nПаттерны:")
             for p in patterns[:5]:
                 conf_bar = "▓" * int(p.confidence * 5) + "░" * (5 - int(p.confidence * 5))
-                lines.append(f"  • {p.pattern_name} [{conf_bar}] {int(p.confidence*100)}%")
+                name_ru = PATTERN_RU.get(p.pattern_name, p.pattern_name)
+                lines.append(f"  • {name_ru} [{conf_bar}] {int(p.confidence*100)}%")
                 if p.description:
-                    # Strip any stray * _ ` chars from Claude output
                     safe_desc = p.description.replace("*", "").replace("_", "").replace("`", "")
                     lines.append(f"    {safe_desc}")
                 if p.entry_setup:
@@ -376,13 +403,14 @@ COORDINATE RULES:
         if levels:
             strong = [l for l in levels if l.strength == "strong"]
             if strong:
-                lines.append("\nKey Levels:")
+                lines.append("\nКлючевые уровни:")
                 for l in strong[:4]:
                     emoji = "🟩" if l.type == "support" else "🟥"
-                    lines.append(f"  {emoji} {l.type.upper()}: {l.level}")
+                    label = "ПОДДЕРЖКА" if l.type == "support" else "СОПРОТИВЛЕНИЕ"
+                    lines.append(f"  {emoji} {label}: {l.level}")
 
         if summary:
             safe_summary = summary.replace("*", "").replace("_", "").replace("`", "")
             lines.append(f"\n💡 {safe_summary}")
 
-        return "\n".join(lines) if lines else "Analysis complete — see annotated chart."
+        return "\n".join(lines) if lines else "Анализ завершён — смотри аннотированный график."
