@@ -238,7 +238,8 @@ class TelegramHandler:
             n_ob   = len(drawing_instructions.get("order_blocks",     []))
             n_liq  = len(drawing_instructions.get("liquidity_sweeps", []))
 
-            header = "📊 *Анализ графика*"
+            # Plain-text header (no Markdown — avoids parse errors with dynamic content)
+            header = "📊 Анализ графика"
             if any([n_fvg, n_sr, n_bos, n_ob, n_liq]):
                 parts = []
                 if n_fvg: parts.append(f"FVG×{n_fvg}")
@@ -256,15 +257,21 @@ class TelegramHandler:
                 reply_text += f"\n\n{warning}"
 
             # 5. Отправляем: аннотированное изображение (если есть) + текст
+            # Telegram caption limit = 1024 chars; no parse_mode to avoid
+            # Markdown parse errors with dynamic Claude content
+            safe_caption = reply_text[:1020]
             if annotated_bytes:
-                await update.message.reply_photo(
-                    photo   = InputFile(io.BytesIO(annotated_bytes), filename="analysis.jpg"),
-                    caption = reply_text,
-                    parse_mode = "Markdown",
-                )
+                try:
+                    await update.message.reply_photo(
+                        photo   = InputFile(io.BytesIO(annotated_bytes), filename="analysis.jpg"),
+                        caption = safe_caption,
+                    )
+                except Exception as send_err:
+                    print(f"⚠️ reply_photo failed ({send_err}), sending text only")
+                    await update.message.reply_text(safe_caption)
             else:
                 # Нет рисунков — шлём только текст
-                await update.message.reply_text(reply_text, parse_mode="Markdown")
+                await update.message.reply_text(reply_text)
 
             # 6. Сохраняем в БД
             patterns_summary = ", ".join(
@@ -278,8 +285,7 @@ class TelegramHandler:
             print(f"❌ Photo error: {e}")
             import traceback; traceback.print_exc()
             await update.message.reply_text(
-                f"⚠️ Ошибка при анализе графика: `{str(e)[:80]}`",
-                parse_mode="Markdown"
+                f"⚠️ Ошибка при анализе графика: {str(e)[:120]}"
             )
 
     # ── Работа с БД ───────────────────────────────────────────────────────────
