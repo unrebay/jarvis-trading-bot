@@ -189,7 +189,11 @@ class LessonManager:
             elif "```" in text:
                 text = text.split("```")[1].split("```")[0]
 
-            questions = json.loads(text.strip())
+            try:
+                questions = json.loads(text.strip())
+            except json.JSONDecodeError as json_err:
+                print(f"⚠️ Quiz JSON parse error: {json_err}")
+                return []
 
             # Validate and sanitize
             validated = []

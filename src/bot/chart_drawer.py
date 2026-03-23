@@ -4,10 +4,15 @@ Chart Drawer Module — Visual annotation engine for trading charts
 Draws ICT/SMC annotations directly on chart images using PIL:
   • FVG zones        — semi-transparent rectangles (bullish=green, bearish=red)
   • S/R levels       — dashed horizontal lines with price labels
-  • BOS / CHoCH      — arrows + text markers
-  • Order Blocks     — outlined rectangles with OB label
+  • BOS / CHoCH      — horizontal dashed lines (DT course style) + direction arrow
+  • Order Blocks     — outlined rectangles with OB label, right-edge extension line
   • Liquidity sweeps — small triangles at swing highs/lows
   • Overall summary  — legend in the corner
+
+Style: matches DT trading course (silk-seahorse) visual language.
+  BOS = horizontal dashed line at break level (blue=up / red=down) + label
+  CHoCH = same but orange, marking first counter-trend break
+  OB = outlined box + thin line to right edge showing active zone
 
 Input: raw image bytes + drawing_instructions JSON from ChartAnnotator
 Output: annotated image bytes (JPEG)
@@ -36,9 +41,11 @@ COLORS = {
     "resistance":     (220,  80,  80, 220),   # bright red
     "key_level":      (255, 200,   0, 220),   # yellow
 
-    # BOS / CHoCH
-    "bos":            (100, 160, 255, 240),   # light blue
-    "choch":          (255, 140,  60, 240),   # orange
+    # BOS / CHoCH  (DT course style)
+    "bos_up":         ( 80, 150, 255, 240),   # blue (bullish BOS)
+    "bos_down":       (220,  80,  80, 240),   # red  (bearish BOS)
+    "bos":            ( 80, 150, 255, 240),   # default = bullish blue
+    "choch":          (255, 160,  40, 240),   # orange (CHoCH)
 
     # Order Blocks
     "ob_bull":        (0,   180, 100,  45),
@@ -188,7 +195,13 @@ class ChartDrawer:
             self._draw_label(x1 + 4, min(y1, y2) + 3, label, self._font_s)
 
     def _draw_order_blocks(self, blocks: List[Dict]) -> None:
-        """Draw Order Block rectangles (outlined)."""
+        """
+        Draw Order Block rectangles — DT course style:
+          • Filled semi-transparent box
+          • Bold outlined border
+          • Thin extension lines to right edge (showing zone still active)
+          • OB label inside box
+        """
         for ob in blocks:
             x1, y1 = self._pct(ob.get("x1_pct", 0), ob.get("y1_pct", 0))
             x2, y2 = self._pct(ob.get("x2_pct", 1), ob.get("y2_pct", 0))
@@ -196,15 +209,24 @@ class ChartDrawer:
 
             fill_key    = "ob_bull" if ob_type == "bullish" else "ob_bear"
             outline_key = "ob_outline_bull" if ob_type == "bullish" else "ob_outline_bear"
+            top_y, bot_y = min(y1, y2), max(y1, y2)
 
+            # Main filled rectangle
             self._draw.rectangle(
-                [x1, min(y1, y2), x2, max(y1, y2)],
+                [x1, top_y, x2, bot_y],
                 fill=_rgba(fill_key),
                 outline=_rgba(outline_key),
                 width=2,
             )
+
+            # Extension lines to right edge (shows zone is active)
+            ext_color = _rgba(outline_key)
+            dash_color = (ext_color[0], ext_color[1], ext_color[2], 100)
+            self._draw_partial_hline(x2, self._w, top_y, dash_color, dash=True)
+            self._draw_partial_hline(x2, self._w, bot_y, dash_color, dash=True)
+
             label = ob.get("label", "OB")
-            self._draw_label(x1 + 4, min(y1, y2) + 3, label, self._font_s)
+            self._draw_label(x1 + 4, top_y + 3, label, self._font_s)
 
     def _draw_sr_levels(self, levels: List[Dict]) -> None:
         """Draw horizontal dashed lines for Support/Resistance."""
@@ -222,18 +244,50 @@ class ChartDrawer:
             self._draw_label(self._w - 4, y - 8, label, self._font_s, align="right")
 
     def _draw_bos_markers(self, markers: List[Dict]) -> None:
-        """Draw BOS / CHoCH arrows with labels."""
+        """
+        Draw BOS / CHoCH markers — DT course style:
+          • Horizontal dashed line from break point to right edge
+          • Small directional arrow at the break point
+          • Label pill on the right side
+        Color: blue for BOS up, red for BOS down, orange for CHoCH.
+        """
         for m in markers:
-            x, y = self._pct(m.get("x_pct", 0.5), m.get("y_pct", 0.5))
+            x, y      = self._pct(m.get("x_pct", 0.5), m.get("y_pct", 0.5))
             label     = m.get("label", "BOS")
             direction = m.get("direction", "up").lower()
             is_choch  = "choch" in label.lower() or "choc" in label.lower()
-            color     = _rgba("choch" if is_choch else "bos")
 
-            self._draw_arrow(x, y, direction, color)
-            # Label below/above arrow
-            offset = -(self.ARROW_SIZE + 14) if direction == "up" else (self.ARROW_SIZE + 4)
-            self._draw_label(x, y + offset, label, self._font_m, center=True)
+            if is_choch:
+                color = _rgba("choch")
+            elif direction == "down":
+                color = _rgba("bos_down")
+            else:
+                color = _rgba("bos_up")
+
+            # ── Horizontal dashed line from break-x to right edge ──────────
+            x_start = max(0, x - 10)  # start slightly left of break point
+            x_draw = x_start
+            on = True
+            while x_draw < self._w:
+                end = min(x_draw + (10 if on else 5), self._w)
+                if on:
+                    self._draw.line([(x_draw, y), (end, y)], fill=color, width=2)
+                x_draw = end
+                on = not on
+
+            # ── Small arrow at break point ─────────────────────────────────
+            s = 8  # smaller than full arrow
+            if direction == "up":
+                pts = [(x, y - s), (x - s, y + s // 2), (x + s, y + s // 2)]
+            else:
+                pts = [(x, y + s), (x - s, y - s // 2), (x + s, y - s // 2)]
+            self._draw.polygon(pts, fill=color, outline=(255, 255, 255, 180))
+
+            # ── Label on the right side ────────────────────────────────────
+            dir_arrow = "↑" if direction == "up" else "↓"
+            full_label = f"{label} {dir_arrow}"
+            label_y = y - 18 if direction == "up" else y + 4
+            self._draw_label(self._w - 6, label_y, full_label, self._font_m, align="right")
 
     def _draw_liquidity_sweeps(self, sweeps: List[Dict]) -> None:
         """Draw liquidity grab markers (small triangles)."""
@@ -327,13 +381,36 @@ class ChartDrawer:
         dash_len: int = 12,
         gap: int = 6,
     ) -> None:
-        """Draw a horizontal dashed line at pixel y."""
+        """Draw a horizontal dashed line at pixel y across full width."""
         x = 0
         on = True
         while x < self._w:
             end = min(x + (dash_len if on else gap), self._w)
             if on:
                 self._draw.line([(x, y), (end, y)], fill=color, width=self.LINE_WIDTH)
+            x = end
+            on = not on
+
+    def _draw_partial_hline(
+        self,
+        x_from: int,
+        x_to: int,
+        y: int,
+        color: Tuple[int, int, int, int],
+        dash: bool = False,
+        dash_len: int = 8,
+        gap: int = 5,
+    ) -> None:
+        """Draw a horizontal line (solid or dashed) from x_from to x_to at pixel y."""
+        if not dash:
+            self._draw.line([(x_from, y), (x_to, y)], fill=color, width=1)
+            return
+        x = x_from
+        on = True
+        while x < x_to:
+            end = min(x + (dash_len if on else gap), x_to)
+            if on:
+                self._draw.line([(x, y), (end, y)], fill=color, width=1)
             x = end
             on = not on
 

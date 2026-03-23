@@ -27,8 +27,9 @@ from typing import Optional
 from supabase import Client
 
 
-# How often (every N user messages) to run Haiku memory extraction
-MEMORY_UPDATE_INTERVAL = 5
+# How often (every N user messages) to run Haiku memory extraction.
+# v2.6: Increased from 5 → 10 to reduce Haiku API calls by ~50% with no UX impact.
+MEMORY_UPDATE_INTERVAL = 10
 
 
 # ─── Default empty portrait ───────────────────────────────────────────────────

@@ -20,6 +20,7 @@ Changes v2 (iMac):
 
 import json
 import base64
+import hashlib
 from datetime import datetime
 from typing import Optional, Dict, List, Any
 from dataclasses import dataclass
@@ -66,6 +67,12 @@ class ChartAnnotator:
     # Dev mode: Haiku to minimize costs. Switch to "claude-opus-4-6" for production accuracy.
     VISION_MODEL = "claude-haiku-4-5-20251001"
 
+    # Image hash cache: avoids re-analyzing identical charts within a session.
+    # Key: sha256 hex of image_data; Value: full analysis result dict.
+    # Cleared on restart — intentionally kept lightweight (no persistence needed).
+    _CACHE_MAX = 64  # keep last 64 unique images in memory
+    _analysis_cache: Dict[str, Dict] = {}
+
     def __init__(self, claude_client: ClaudeClient):
         self.claude = claude_client
 
@@ -97,11 +104,18 @@ class ChartAnnotator:
         context = context or {}
         chart_info = self._extract_chart_info(context)
 
+        # ── Image hash cache: skip Vision API if same image seen before ──────
+        img_hash = hashlib.sha256(image_data).hexdigest()
+        if img_hash in ChartAnnotator._analysis_cache:
+            cached = ChartAnnotator._analysis_cache[img_hash].copy()
+            cached["from_cache"] = True
+            return cached
+
         result = self._call_claude_vision(image_data, chart_info)
         if not result.get("success"):
             return result
 
-        return {
+        analysis = {
             "success": True,
             "chart_info": chart_info,
             "patterns": result["patterns"],
@@ -109,7 +123,16 @@ class ChartAnnotator:
             "drawing_instructions": result["drawing_instructions"],
             "analysis_text": result["analysis_text"],
             "raw_response": result.get("raw_response", ""),
+            "from_cache": False,
         }
+
+        # Store in cache (evict oldest if at capacity)
+        if len(ChartAnnotator._analysis_cache) >= ChartAnnotator._CACHE_MAX:
+            oldest_key = next(iter(ChartAnnotator._analysis_cache))
+            del ChartAnnotator._analysis_cache[oldest_key]
+        ChartAnnotator._analysis_cache[img_hash] = analysis
+
+        return analysis
 
     # ─── Private ──────────────────────────────────────────────────────────────
 
@@ -191,13 +214,15 @@ Chart context:
 
 === WHAT TO IDENTIFY ===
 
-1. ICT / SMC PATTERNS
-   • FVG (Fair Value Gaps) — imbalance zones between candles
-   • Order Blocks (OB) — last up/down candle before strong move
-   • BOS (Break of Structure) — higher high or lower low break
-   • CHoCH (Change of Character) — first counter-trend BOS
-   • Judas Swing — liquidity sweep before real move
-   • Liquidity sweeps — stop-hunt above/below swing highs/lows
+1. ICT / SMC PATTERNS  (DT trading course style — silk-seahorse)
+   • FVG (Fair Value Gap / Imbalance) — 3-candle gap zone; bullish=expect return up, bearish=down
+   • Order Block (OB) — last opposite candle before impulsive move; key retracement zone
+   • BOS (Break of Structure) — break of previous HH (bullish) or LL (bearish); structural shift
+   • CHoCH (Change of Character) — FIRST counter-trend BOS; potential reversal signal
+   • STB / BTS — Supply-to-Buy / Buy-to-Sell (BOS area used as demand/supply block)
+   • Inducement (IDM) — liquidity placed near OB/FVG border to lure early entries
+   • Judas Swing — early-session liquidity sweep before real directional move
+   • Liquidity sweeps — stop-hunt above BSL (buy-side liquidity) or below SSL (sell-side)
 
 2. KEY LEVELS — strong S/R, POI zones, previous highs/lows
 
@@ -262,9 +287,20 @@ Return ONLY valid JSON (no markdown, no extra text):
     ],
     "bos_markers": [
       {{
-        "x_pct": 0.62, "y_pct": 0.35,
+        "x_pct": 0.62,
+        "y_pct": 0.35,
         "direction": "up",
-        "label": "BOS"
+        "label": "BOS",
+        "type": "bullish",
+        "note": "Price broke above previous HH — bullish structure confirmed"
+      }},
+      {{
+        "x_pct": 0.45,
+        "y_pct": 0.58,
+        "direction": "up",
+        "label": "CHoCH",
+        "type": "bullish",
+        "note": "First bullish BOS after bearish trend — change of character"
       }}
     ],
     "liquidity_sweeps": [

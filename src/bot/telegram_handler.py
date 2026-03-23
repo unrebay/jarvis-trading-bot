@@ -1,5 +1,5 @@
 """
-telegram_handler.py — Обработка Telegram сообщений (v2.4)
+telegram_handler.py — Обработка Telegram сообщений (v2.6)
 
 Changes v2.4:
 - UserMemory: persistent student portrait stored in Supabase
@@ -22,6 +22,8 @@ Previous fixes (v2.2):
 import asyncio
 import io
 import os
+import time
+from typing import Dict
 from telegram import Update, InputFile
 from telegram.ext import ContextTypes
 from supabase import Client
@@ -39,6 +41,11 @@ from .user_memory import UserMemory
 
 
 class TelegramHandler:
+    # Per-user rate limiting (v2.6): max 1 request per RATE_LIMIT_SECONDS per user.
+    # Prevents accidental API spam from rapid-fire messages.
+    RATE_LIMIT_SECONDS = 3
+    _last_request: Dict[int, float] = {}  # user_id → timestamp of last request
+
     def __init__(self, claude_client: ClaudeClient, supabase: Client, rag: RAGSearch):
         # Принимаем ClaudeClient напрямую (не сырой Anthropic)
         self.claude   = claude_client
@@ -106,6 +113,8 @@ class TelegramHandler:
         """Handle /status command — показывает текущий режим и бюджет."""
         # FIX: access tracker fields directly (get_daily_summary() returns a string, not dict)
         cost_manager.reset_daily_limit()  # ensure today's tracker is current
+        # NOTE: Python GIL ensures this two-step read is safe even under concurrent async requests,
+        # since reset_daily_limit() and tracker attribute access are both synchronous operations.
         tracker = cost_manager.tracker
         mode    = cost_manager.get_mode()
 
@@ -493,6 +502,13 @@ class TelegramHandler:
 
         self._ensure_user_exists(user_id, username)
 
+        # Rate limit check (v2.6): silently drop duplicate requests < 3 sec apart
+        now = time.monotonic()
+        last = TelegramHandler._last_request.get(user_id, 0)
+        if now - last < TelegramHandler.RATE_LIMIT_SECONDS:
+            return  # ignore — user is sending too fast
+        TelegramHandler._last_request[user_id] = now
+
         # Проверка бюджета
         if not cost_manager.can_use_api():
             await update.message.reply_text(
@@ -555,10 +571,11 @@ class TelegramHandler:
                 reply += f"\n\n{warning}"
 
             # FIX: Markdown parse_mode crashes when Claude response has unescaped * _ `
-            # Try with Markdown first, silently fall back to plain text on parse error
+            # Try with Markdown first, log + fall back to plain text on parse error
             try:
                 await update.message.reply_text(reply, parse_mode="Markdown")
-            except Exception:
+            except Exception as md_error:
+                logger.debug(f"Markdown parse failed (falling back to plain text): {md_error}")
                 await update.message.reply_text(reply)
 
         except Exception as e:
