@@ -63,7 +63,8 @@ class ChartAnnotator:
     (normalized 0-1 coordinates) that ChartDrawer can render.
     """
 
-    VISION_MODEL = "claude-opus-4-6"
+    # Dev mode: Haiku to minimize costs. Switch to "claude-opus-4-6" for production accuracy.
+    VISION_MODEL = "claude-haiku-4-5-20251001"
 
     def __init__(self, claude_client: ClaudeClient):
         self.claude = claude_client
@@ -139,7 +140,7 @@ class ChartAnnotator:
 
             response = self.claude.client.messages.create(
                 model=self.VISION_MODEL,
-                max_tokens=4096,
+                max_tokens=2048,  # Haiku достаточно; увеличить для Opus/Sonnet
                 messages=[
                     {
                         "role": "user",
