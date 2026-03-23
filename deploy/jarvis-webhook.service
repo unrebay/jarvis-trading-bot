@@ -1,0 +1,22 @@
+[Unit]
+Description=JARVIS GitHub Auto-Deploy Webhook Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/jarvis
+ExecStart=/usr/bin/python3 /opt/jarvis/deploy/webhook_server.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=jarvis-webhook
+
+# Keep alive
+KillMode=process
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target
