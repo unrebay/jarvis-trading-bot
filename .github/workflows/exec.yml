@@ -1,0 +1,28 @@
+name: Exec on VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Bash команда для выполнения на VPS'
+        required: true
+        default: 'systemctl status jarvis-bot --no-pager -l | head -30'
+
+jobs:
+  exec:
+    name: Run on VPS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute command via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "🖥  VPS: $(hostname) | $(date '+%Y-%m-%d %H:%M:%S %Z')"
+            echo "📦  Команда: ${{ github.event.inputs.command }}"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            ${{ github.event.inputs.command }}
