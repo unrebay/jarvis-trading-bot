@@ -345,7 +345,11 @@ COORDINATE RULES:
         patterns: List[DetectedPattern],
         levels:   List[KeyLevel],
     ) -> str:
-        """Build a concise Telegram-ready analysis narrative."""
+        """
+        Build a concise Telegram-safe analysis narrative.
+        Uses plain text (no Markdown) to avoid parse errors with
+        dynamic content from Claude that may contain unescaped chars.
+        """
         bias    = data.get("market_bias", "").capitalize()
         summary = data.get("analysis_summary", "")
 
@@ -353,17 +357,17 @@ COORDINATE RULES:
 
         if bias:
             emoji = "🟢" if bias.lower() == "bullish" else ("🔴" if bias.lower() == "bearish" else "⚪")
-            lines.append(f"{emoji} *Bias:* {bias}")
+            lines.append(f"{emoji} Bias: {bias}")
 
         if patterns:
-            lines.append("\n*Detected Patterns:*")
+            lines.append("\nDetected Patterns:")
             for p in patterns[:5]:
                 conf_bar = "▓" * int(p.confidence * 5) + "░" * (5 - int(p.confidence * 5))
-                lines.append(
-                    f"  • *{p.pattern_name}* [{conf_bar}] {int(p.confidence*100)}%"
-                )
+                lines.append(f"  • {p.pattern_name} [{conf_bar}] {int(p.confidence*100)}%")
                 if p.description:
-                    lines.append(f"    _{p.description}_")
+                    # Strip any stray * _ ` chars from Claude output
+                    safe_desc = p.description.replace("*", "").replace("_", "").replace("`", "")
+                    lines.append(f"    {safe_desc}")
                 if p.entry_setup:
                     es = p.entry_setup
                     if es.get("risk_reward"):
@@ -372,12 +376,13 @@ COORDINATE RULES:
         if levels:
             strong = [l for l in levels if l.strength == "strong"]
             if strong:
-                lines.append("\n*Key Levels:*")
+                lines.append("\nKey Levels:")
                 for l in strong[:4]:
                     emoji = "🟩" if l.type == "support" else "🟥"
                     lines.append(f"  {emoji} {l.type.upper()}: {l.level}")
 
         if summary:
-            lines.append(f"\n💡 _{summary}_")
+            safe_summary = summary.replace("*", "").replace("_", "").replace("`", "")
+            lines.append(f"\n💡 {safe_summary}")
 
         return "\n".join(lines) if lines else "Analysis complete — see annotated chart."
