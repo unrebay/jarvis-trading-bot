@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Image Annotation",
+  "description": "Annotated image with trading concepts, patterns, or educational content",
+  "type": "object",
+  "required": ["id", "image_url", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^image_[a-z0-9_]+$"
+    },
+    "image_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the image"
+    },
+    "file_path": {
+      "type": "string",
+      "description": "Local file path"
+    },
+    "title": {
+      "type": "string",
+      "description": "Image title"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the image shows"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["chart", "diagram", "screenshot", "concept-map", "setup-example"],
+      "description": "Type of image"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": ["image/png", "image/jpeg", "image/gif", "image/svg+xml"]
+    },
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "width": {"type": "integer"},
+        "height": {"type": "integer"}
+      }
+    },
+    "file_size_kb": {
+      "type": "integer"
+    },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "type": {"type": "string", "enum": ["point", "rectangle", "circle", "line", "text", "arrow"]},
+          "coordinates": {
+            "type": "array",
+            "items": {"type": "number"}
+          },
+          "label": {"type": "string"},
+          "color": {"type": "string"},
+          "description": {"type": "string"}
+        }
+      },
+      "description": "Geometric annotations on the image"
+    },
+    "text_annotations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {"type": "string"},
+          "text": {"type": "string"}
+        }
+      },
+      "description": "Key text labels and what they mean"
+    },
+    "related_patterns": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^pattern_[a-z0-9_]+$"}
+    },
+    "related_lessons": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^lesson_[a-z0-9_]+$"}
+    },
+    "related_rules": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^rule_[a-z0-9_]+$"}
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

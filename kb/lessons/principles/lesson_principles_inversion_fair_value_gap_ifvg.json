@@ -1,0 +1,24 @@
+{
+  "id": "lesson_principles_inversion_fair_value_gap_ifvg",
+  "title": "Inversion Fair Value Gap (IFVG)",
+  "description": "Lesson on Inversion Fair Value Gap (IFVG)",
+  "category": "principles",
+  "level": "intermediate",
+  "content": "# Inversion Fair Value Gap (IFVG)\n\n## Определение\n\n**IFVG (Inversion Fair Value Gap)** — это дисбаланс в цене, аналог обычного FVG, который был **полностью прошит / проигнорирован** ценой.\n\nКогда цена проходит насквозь через обычный FVG (не реагирует на него), этот FVG превращается в IFVG.\n\n## Как правильно отмечать IFVG?\n\nИспользуя инструмент «Коррекция по Фибоначчи» выделяем IMB (FVG), который цена **проигнорировала** — он и будет iFVG.\n\n**Важно**: дисбаланс **не должен быть прошит другим дисбалансом**. Если FVG будет прошит другим FVG — это уже будет **BPR** (Balanced Price Range), а не IFVG.\n\n## Разница FVG vs IFVG\n\n- **Обычный FVG** — дисбаланс, цена ещё не реагировала. Ожидаем реакцию.\n- **IFVG** — тот же дисбаланс, но цена его полностью пробила и прошла насквозь. Теперь он работает как зона притяжения/разворота в другом направлении.\n\n## Применение\n\nIFVG как и другие виды ценовых дисбалансов используется:\n- В **определении контекста** — на старшем ТФ как POI\n- В **модели для входа** — ищем реакцию при возврате к IFVG\n- На старшем ТФ выступает как зона, внутри которой можно искать факторы для набора позиции\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.586487",
+  "updated_at": "2026-03-22T22:05:44.586489",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "principles"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/principles/ifvg.md",
+  "file_hash": "96ac7a769081",
+  "status": "active"
+}

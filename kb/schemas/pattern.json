@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pattern",
+  "description": "Trading chart pattern or market behavior",
+  "type": "object",
+  "required": ["id", "name", "description"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^pattern_[a-z0-9_]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Pattern name (e.g., 'Judas Swing', 'Break of Structure')"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this pattern is and how it appears"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["ICT", "price-action", "structure", "liquidity", "session-based"],
+      "description": "Pattern category"
+    },
+    "timeframes": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["1M", "5M", "15M", "1H", "4H", "1D", "1W"]},
+      "description": "Applicable timeframes"
+    },
+    "identification_criteria": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "How to identify this pattern"
+    },
+    "trade_setup": {
+      "type": "string",
+      "description": "How to trade this pattern"
+    },
+    "entry_conditions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "exit_conditions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "risk_reward": {
+      "type": "string",
+      "description": "Expected RR ratio"
+    },
+    "win_rate": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Historical win rate %"
+    },
+    "chart_examples": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^chart_[a-z0-9_]+$"}
+    },
+    "related_lessons": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^lesson_[a-z0-9_]+$"}
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

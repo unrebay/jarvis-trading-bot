@@ -1,0 +1,24 @@
+{
+  "id": "lesson_beginners_terminology",
+  "title": "Terminology — Глоссарий трейдера",
+  "description": "Lesson on Terminology — Глоссарий трейдера",
+  "category": "beginners",
+  "level": "beginner",
+  "content": "# Terminology — Глоссарий трейдера\n\n## A\n- **AH** - Asia High | **AL** — Asia Low — максимум и минимум Азиатской сессии\n- **ATH** (all-time high) — исторический максимум цены актива\n- **ATL** (all-time low) — исторический минимум цены актива\n\n## B\n- **BE** — Break Even — точка безубыточности, уровень при котором убыток равен 0\n- **BIAS** — контекст, элемент торговли, определяющий общее настроение рынка. Куда будет двигаться цена\n- **BSL** — buy-side liquidity, стопы тех, кто открыл шорт\n- **Buy Limit** — отложенный ордер на покупку ниже текущей рыночной цены\n\n## E\n- **Entry Point** (ТВХ) — точка входа, уровень по которому открывается позиция\n- **EQH** — Equal highs | **EQL** — Equal lows — равные максимумы/минимумы, ровно-снятая ликвидность\n- **FTA** — First Trouble Area — первая зона сопротивления, способная развернуть движение\n- **FX** — Forex — международный валютный рынок\n\n## H\n- **HTF** — Higher Time-frame, старшие таймфреймы\n\n## I\n- **IMB | FVG** (Imbalance | Fair Value Gap | Disbalance | Price Insufficiency) — ценовой дисбаланс. Диапазон где было заложено мало ликвидности. Сильное импульсное движение, которое цена почти всегда возвращается перекрывать\n- **Indices** — международный рынок индексов (S&P 500, NASDAQ-100 и др.)\n\n## L\n- **LG** — Liquidity Grab — синоним Sweep & Raid — снятие ликвидности\n- **LH** — London High | **LL** — London Low — максимум и минимум Лондонской сессии\n- **Limit Order** — отложенный ордер на покупку/продажу при достижении определённого уровня\n- **LTF** — Lower Timeframe — младшие таймфреймы\n\n## M\n- **Market Order** — рыночный ордер, активируется сразу по текущей цене\n- **Move** (мув) — движение, которое приводит к чему-либо\n\n## N\n- **NY high | NY low** — максимум и минимум Нью-Йоркской сессии\n\n## O\n- **OTE** — Optimal Trade Entry — оптимальный вход в сделку\n- **OTT** — Optimal Trade Time — оптимальное время для торговли\n\n## P\n- **PDH** — Previous Day High | **PDL** — Previous Day Low — максимум и минимум предыдущего дня\n- **PTA** — Possible Trouble Area — проблемная зона, способная перевернуть движение\n- **PWH** — Previous Week High | **PWL** — Previous Week Low — максимум и минимум предыдущей недели\n\n## R\n- **Raid** — рейд ликвидности, снятие телом\n- **RTO** — Return to Origin — откат/коррекция\n- **RR** — Risk Reward — соотношение риска к ожидаемой прибыли\n\n## S\n- **Sell Limit** — отложенный ордер на продажу выше текущей рыночной цены\n- **SL** — Stop Loss — фиксация убытка для защиты от крупных потерь\n- **SM** — Smart Money — концепция анализа действий крупных игроков на рынке\n- **SSL** — sell-side liquidity — стопы тех, кто открыл лонг\n- **Sweep** — свип ликвидности, снятие фитилём\n\n## T\n- **TP** — Take Profit — фиксация прибыли при достижении определённого уровня\n- **TV** — TradingView — платформа для анализа графиков\n- **Terminal** — платформа для торговых операций (Форекс, Индексы, Металлы)\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 2,
+  "created_at": "2026-03-22T22:05:44.556640",
+  "updated_at": "2026-03-22T22:05:44.556643",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "beginners"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/beginners/terminology.md",
+  "file_hash": "d8a78035e154",
+  "status": "active"
+}

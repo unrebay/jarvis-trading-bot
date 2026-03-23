@@ -1,0 +1,177 @@
+# Video Ingestion Configuration
+# Handles educational video processing and transcription
+
+ingestion_settings:
+
+  # Video source directories
+  source_directories:
+    - path: "kb/media/videos/raw/"
+      description: "Raw uploaded videos"
+      scan_frequency: "daily"
+
+  # File handling
+  file_handling:
+    supported_formats:
+      - ".mp4"
+      - ".mov"
+      - ".avi"
+      - ".webm"
+      - ".m4v"
+    max_file_size_mb: 500
+    min_duration_seconds: 30
+    max_duration_seconds: 7200  # 2 hours
+
+  # Video analysis
+  video_analysis:
+    enabled: true
+    extract_metadata: true
+    detect_resolution: true
+    detect_fps: true
+    analyze_duration: true
+
+  # Transcription
+  transcription:
+    enabled: true
+    service: "anthropic"  # Claude via API
+    extract_audio: true
+    audio_format: "mp3"
+    audio_sample_rate: 16000
+    language: "en"
+    timestamp_precision: "sentence"  # Include timing info
+    on_failure: "mark_pending"
+
+  # Keyframe extraction
+  keyframe_extraction:
+    enabled: true
+    strategy: "scene_detection"
+    frame_interval_seconds: 30
+    min_frames: 5
+    max_frames: 50
+    output_format: "png"
+    quality: 85
+
+  # Vision analysis of keyframes
+  keyframe_analysis:
+    enabled: true
+    analyze_with_vision: true
+    model: "claude-opus-4.6"
+    detect_patterns: true
+    extract_text: true
+    generate_descriptions: true
+
+  # Segmentation
+  segmentation:
+    enabled: false  # Manual later
+    auto_segment: false
+    on_scene_change: true
+    min_segment_duration: 10
+
+  # Storage
+  storage:
+    organize_by:
+      - upload_date  # YYYY/MM/DD/
+    preserve_original: true
+    original_location: "kb/media/videos/archive/"
+    processed_location: "kb/media/videos/processed/"
+    keyframes_location: "kb/media/frames/"
+    transcription_location: "kb/metadata/transcriptions/"
+
+  # Metadata
+  metadata:
+    extract_title: true
+    extract_description: true
+    extract_upload_date: true
+    extract_duration: true
+    generate_hash: true
+    store_resolution: true
+    store_fps: true
+
+  # Deduplication
+  deduplication:
+    enabled: true
+    strategy: "hash_based"
+    skip_duplicates: true
+    check_duration_similarity: true
+
+  # Entity creation
+  entity_creation:
+    create_video_segment: true
+    auto_categorize: true
+    link_to_lessons: true
+    link_to_patterns: true
+
+  # Quality checks
+  quality_checks:
+    min_audio_duration_percent: 50  # At least 50% has audio
+    max_silence_duration_seconds: 10
+    audio_quality_check: true
+    min_audio_clarity: 0.7
+
+  # Processing
+  processing:
+    convert_to_h264: true
+    target_resolution: "1080p"
+    target_bitrate: "5000k"
+    preserve_original: true
+    parallel_encoding: false  # Videos take long
+
+  # Batch processing
+  batch_processing:
+    enabled: true
+    batch_size: 1  # Process one video at a time (resource intensive)
+    scheduler: "n8n"
+    priority_queue: true
+    process_during_offpeak: true
+    offpeak_hours: "22:00-06:00"  # Process overnight
+
+  # Error handling
+  error_handling:
+    on_transcription_failure: "retry_later"
+    on_keyframe_failure: "skip_keyframes"
+    on_analysis_failure: "mark_pending_review"
+    max_retries: 3
+    retry_delay_minutes: 60
+
+  # Monitoring
+  monitoring:
+    track_processing_time: true
+    track_success_rate: true
+    alert_on_failures: true
+    log_level: "info"
+
+  # API settings
+  api_settings:
+    anthropic_model: "claude-opus-4.6"
+    max_tokens_per_request: 4000
+    temperature: 0.7
+    cache_transcriptions: true
+    cache_duration_days: 90
+
+  # Cost optimization
+  cost_optimization:
+    batch_frames_for_analysis: true
+    frames_per_batch: 5
+    use_haiku_for_basic_tasks: true
+    use_sonnet_for_complex_analysis: true
+    use_opus_only_if_needed: true
+    estimated_cost_per_hour: 0.5  # USD
+
+# Transcription Prompt
+transcription_prompt: |
+  Transcribe this video with high accuracy. Include:
+  1. All spoken words
+  2. Timestamps at each speaker change or topic transition
+  3. [SILENCE] markers for gaps > 3 seconds
+  4. [MUSIC] markers for background music
+  5. Speaker names if identifiable
+
+  Format as JSON with:
+  {
+    "segments": [
+      {"start": 0, "end": 5, "speaker": "Unknown", "text": "..."}
+    ]
+  }
+
+# Version
+version: "1.0"
+created_at: "2026-03-22"

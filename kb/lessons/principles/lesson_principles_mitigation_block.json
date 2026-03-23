@@ -1,0 +1,24 @@
+{
+  "id": "lesson_principles_mitigation_block",
+  "title": "Mitigation Block",
+  "description": "Lesson on Mitigation Block",
+  "category": "principles",
+  "level": "intermediate",
+  "content": "# Mitigation Block\n\n## Определение\n\n**Mitigation Block** — это импульсно пробитый low/high, который **не снимает ликвидность с предыдущего экстремума**.\n\n## Логика формирования\n\nЛогика данного блока очень проста. В случае формирования Mitigation Block участники рынка, кто взяли лонг ещё до начала формирования шортовой структуры, попадают в ловушку и будут стараться компенсировать свои потери, когда цена вернется до своего старого минимума.\n\n## Как работать с Mitigation Block?\n\nMitigation Block является точно такой же зоной спроса/предложения как и Breaker и другие блоки. Работа внутри него происходит точно так же как и в любой другой зоне.\n\n**Рекомендация**: комбинировать данную зону вместе с **SMT Divergence**, поскольку в таком случае SMT будет дополнительным фактором для разворота.\n\n## Связь с другими концептами\n\n- Является зоной спроса/предложения наряду с Breaker Block, Rejection Block, Propulsion Block\n- Усиливается при наличии SMT Divergence\n- Используется как POI в контексте торговой модели\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.589524",
+  "updated_at": "2026-03-22T22:05:44.589526",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "principles"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/principles/mitigation-block.md",
+  "file_hash": "248d86a6c3a6",
+  "status": "active"
+}

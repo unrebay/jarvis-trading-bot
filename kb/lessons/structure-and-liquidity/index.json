@@ -1,0 +1,19 @@
+{
+  "category": "structure-and-liquidity",
+  "total_lessons": 2,
+  "lessons": [
+    {
+      "id": "lesson_structure-and-liquidity_structural_liquidit",
+      "title": "Structural Liquidity (SLQ)",
+      "level": "intermediate",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_structure-and-liquidity_weak_strong_high_lo",
+      "title": "Слабые и сильные структурные точки (Weak/Strong High/Low)",
+      "level": "intermediate",
+      "reading_time": 1
+    }
+  ],
+  "created_at": "2026-03-22T22:05:44.629358"
+}

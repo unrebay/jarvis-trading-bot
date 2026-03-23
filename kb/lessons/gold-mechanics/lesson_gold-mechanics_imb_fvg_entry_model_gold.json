@@ -1,0 +1,24 @@
+{
+  "id": "lesson_gold-mechanics_imb_fvg_entry_model_gold",
+  "title": "IMB как модель входа (FVG Entry Model — Gold)",
+  "description": "Lesson on IMB как модель входа (FVG Entry Model — Gold)",
+  "category": "gold-mechanics",
+  "level": "advanced",
+  "content": "# IMB как модель входа (FVG Entry Model — Gold)\n\n## Концепция\n\nFVG как модель для входа в позицию на Gold. Цена оставляет множество FVG — задача правильно определить тот, от которого последует реакция.\n\n## Признаки рабочего FVG\n\n**Хороший FVG** — тот, внутри которого цена может сделать как минимум **1–2 манипуляции**, во время которых можно набрать позицию.\n\n**Плохой FVG** — тот, который по сути уже практически перекрыт и сам по себе практически не влияет на поведение цены.\n\nВсегда опираться на те FVG, **внутри которых можно рассмотреть работу на LTF**.\n\n## Пример применения\n\n1. Чётко видим, что внутри **1H FVG** можно поработать на **5M** с ликвидностью\n2. В зависимости от ситуации — вход с **BPR на LTF** является хорошей точкой\n\n## Условия применения\n\nЭтот подход работает **только при наличии**:\n- **Агрессивного потока приказов** — чёткий контекст и агрессивное движение с одну из сторон\n- **Крупных дисбалансов** — цена оставляет большие FVG\n\n## Когда НЕ работать с FVG\n\nВ **запиленном движении** (sideways/choppy) цена тоже оставляет много FVG — но рассматривать их для работы не стоит. Отличие от агрессивного потока: в запиле нет чёткого доминирования одной стороны.\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.564406",
+  "updated_at": "2026-03-22T22:05:44.564409",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "gold-mechanics"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/gold-mechanics/imbalance-entry-model.md",
+  "file_hash": "b12ae2ef581a",
+  "status": "active"
+}

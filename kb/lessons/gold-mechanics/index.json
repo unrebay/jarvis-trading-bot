@@ -1,0 +1,55 @@
+{
+  "category": "gold-mechanics",
+  "total_lessons": 8,
+  "lessons": [
+    {
+      "id": "lesson_gold-mechanics_be_friend_or_foe",
+      "title": "BE — Friend or Foe? (Безубыток: друг или враг?)",
+      "level": "advanced",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_gold-mechanics_fvg_gold",
+      "title": "Поведение цены в FVG (Gold)",
+      "level": "advanced",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_gold-mechanics_work_with_timings_gold",
+      "title": "Work with Timings (Gold — таймингинг торговли)",
+      "level": "advanced",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_gold-mechanics_imb_fvg_entry_model_gold",
+      "title": "IMB как модель входа (FVG Entry Model — Gold)",
+      "level": "advanced",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_gold-mechanics_4h_1h_30m_fvg",
+      "title": "4H/1H/30M FVG — Как с ними работать",
+      "level": "advanced",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_gold-mechanics_reverse_before_target_gold",
+      "title": "Reverse Before Target (Разворот до таргета — Gold)",
+      "level": "advanced",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_gold-mechanics_reverses_gold",
+      "title": "Reverses (Ценовые развороты — Gold)",
+      "level": "advanced",
+      "reading_time": 1
+    },
+    {
+      "id": "lesson_gold-mechanics_work_with_full_fill_gold",
+      "title": "Work with Full-Fill (Gold)",
+      "level": "advanced",
+      "reading_time": 1
+    }
+  ],
+  "created_at": "2026-03-22T22:05:44.625818"
+}

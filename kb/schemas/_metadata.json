@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Knowledge Base Metadata",
+  "description": "Metadata about the knowledge base as a whole",
+  "type": "object",
+  "required": ["version", "last_updated"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "KB version (e.g., '1.0.0')"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "KB creation date"
+    },
+    "total_lessons": {
+      "type": "integer",
+      "description": "Total lesson count"
+    },
+    "total_patterns": {
+      "type": "integer",
+      "description": "Total pattern count"
+    },
+    "total_rules": {
+      "type": "integer",
+      "description": "Total rule count"
+    },
+    "total_topics": {
+      "type": "integer",
+      "description": "Total topic count"
+    },
+    "total_terms": {
+      "type": "integer",
+      "description": "Total term count"
+    },
+    "total_charts": {
+      "type": "integer",
+      "description": "Total chart example count"
+    },
+    "total_images": {
+      "type": "integer",
+      "description": "Total image annotation count"
+    },
+    "total_videos": {
+      "type": "integer",
+      "description": "Total video segment count"
+    },
+    "embeddings_indexed": {
+      "type": "integer",
+      "description": "Number of entities with embeddings"
+    },
+    "categories": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "All categories present in KB"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "type": {"type": "string", "enum": ["markdown", "video", "image", "discord", "manual"]},
+          "count": {"type": "integer"},
+          "last_imported": {"type": "string", "format": "date-time"}
+        }
+      },
+      "description": "Data sources and import history"
+    },
+    "completeness_metrics": {
+      "type": "object",
+      "properties": {
+        "lessons_with_examples": {
+          "type": "number",
+          "description": "% of lessons with chart examples"
+        },
+        "lessons_with_images": {
+          "type": "number",
+          "description": "% of lessons with image annotations"
+        },
+        "patterns_documented": {
+          "type": "number",
+          "description": "% of patterns with examples"
+        },
+        "embeddings_coverage": {
+          "type": "number",
+          "description": "% of content with embeddings"
+        }
+      }
+    },
+    "quality_notes": {
+      "type": "string",
+      "description": "Notes on KB quality and gaps"
+    },
+    "next_priorities": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "What to add/improve next"
+    }
+  }
+}

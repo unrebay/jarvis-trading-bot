@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Video Segment",
+  "description": "Educational video segment with transcription and keyframes",
+  "type": "object",
+  "required": ["id", "title", "video_url"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^video_[a-z0-9_]+$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Video segment title"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this video covers"
+    },
+    "video_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the video"
+    },
+    "file_path": {
+      "type": "string",
+      "description": "Local file path"
+    },
+    "duration_seconds": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Video length in seconds"
+    },
+    "resolution": {
+      "type": "string",
+      "enum": ["480p", "720p", "1080p", "4K"],
+      "description": "Video resolution"
+    },
+    "file_size_mb": {
+      "type": "number"
+    },
+    "transcription": {
+      "type": "string",
+      "description": "Full or partial transcription"
+    },
+    "transcription_status": {
+      "type": "string",
+      "enum": ["pending", "in-progress", "complete", "partial"],
+      "description": "Transcription status"
+    },
+    "keyframes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp_seconds": {"type": "number"},
+          "image_url": {"type": "string"},
+          "description": {"type": "string"},
+          "related_concepts": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      },
+      "description": "Key moments with screenshots"
+    },
+    "chapters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "start_time": {"type": "number"},
+          "end_time": {"type": "number"},
+          "title": {"type": "string"},
+          "description": {"type": "string"}
+        }
+      },
+      "description": "Video chapters/sections"
+    },
+    "related_lessons": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^lesson_[a-z0-9_]+$"}
+    },
+    "related_patterns": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^pattern_[a-z0-9_]+$"}
+    },
+    "related_image_annotations": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^image_[a-z0-9_]+$"}
+    },
+    "topics_covered": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "difficulty_level": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

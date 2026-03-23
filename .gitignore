@@ -31,3 +31,12 @@ secrets/
 logs/
 .DS_Store
 node_modules/
+
+# Bot runtime data (cost tracking, session files)
+data/
+*.json.bak
+
+# SSH keys (never commit)
+*.pem
+deploy/jarvis_vps*
+deploy/jarvis_github*

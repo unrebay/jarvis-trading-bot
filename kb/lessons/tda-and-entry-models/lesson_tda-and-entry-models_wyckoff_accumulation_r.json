@@ -1,0 +1,24 @@
+{
+  "id": "lesson_tda-and-entry-models_wyckoff_accumulation_r",
+  "title": "Wyckoff — Accumulation / Re-accumulation",
+  "description": "Lesson on Wyckoff — Accumulation / Re-accumulation",
+  "category": "tda-and-entry-models",
+  "level": "advanced",
+  "content": "# Wyckoff — Accumulation / Re-accumulation\n\n## Аккумуляция (Накопление)\n\nФаза накопления — период, когда крупные игроки аккумулируют актив по низким ценам. Начинается после агрессивного падения, за которым следует торговый диапазон (Range).\n\n### Phase A — Торможение падения\n- **PS** (Preliminary Support) — предварительная поддержка: появляются новые покупатели, но их сил недостаточно\n- **SC** (Selling Climax) — кульминация продаж: паника толпы поглощается крупным игроком, падение останавливается\n- **AR** (Automatic Rally) — первая реакция вверх: встречные покупки создают импульс вверх\n- **ST** (Secondary Test) — вторичный тест зоны SC (тестов может быть несколько)\n\n### Phase B — Накопление в диапазоне\nКонсолидация: цена торгуется в пределах диапазона. Возможны несколько ST и фейковые выходы выше AR. Самое сложное — ждать.\n\n### Phase C — Последняя манипуляция (Spring)\n- **Spring** (\"пружина\") — пробой ниже диапазона, заманивает слабых игроков и поглощает их ликвидность по низким ценам. После этого — финальный тест и начало направленного движения вверх.\n\n### Phase D — Движение из диапазона\n- **LPS** (Last Point of Support) — последние уровни поддержки\n- **SOS** (Sign of Strength) — признак силы: агрессивное движение вверх на больших объёмах\n- **BU/LPS** (Back Up to LPS) — последний тест зоны поддержки перед трендом\n\n### Phase E — Начало тренда\nАгрессивный выход из диапазона и начало восходящего тренда (Следствие после Причины).\n\n## Ре-аккумуляция\n\nВ ходе восходящего тренда крупный игрок набирает дополнительный актив по ещё невысоким ценам. Схема аналогична аккумуляции, но менее значительная (меньше \"Причина\" → меньше \"Следствие\").\n\nКлючевые элементы: PSY, BC (Buying Climax)\n\n## Важно\n\nСхема на графике никогда не совпадёт с идеальной. Нужно понимать **принцип и мотив** каждого участка, а не механически искать точные паттерны.\n\n## Источник\n\n[Accumulation/Re-accumulation | Notion](https://silk-seahorse-538.notion.site/Accumulation-Re-accumulation-45b5fd765df249dbb9dcaa2a70393aca)\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.620404",
+  "updated_at": "2026-03-22T22:05:44.620407",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "tda-and-entry-models"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/tda-and-entry-models/wyckoff-accumulation.md",
+  "file_hash": "3fa9bb101189",
+  "status": "active"
+}

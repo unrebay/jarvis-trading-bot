@@ -1,0 +1,24 @@
+{
+  "id": "lesson_principles_poi_point_of_interest",
+  "title": "POI (Point of Interest)",
+  "description": "Lesson on POI (Point of Interest)",
+  "category": "principles",
+  "level": "intermediate",
+  "content": "# POI (Point of Interest)\n\n## Определение\n\n**POI (Point of Interest)** — зона интереса в виде любого спроса или предложения, от которого рассматривается вход в позицию. На графике может быть несколько POI, важно правильно их валидировать.\n\n## Что может быть POI?\n\nЗоны спроса или предложения, которые выступают как POI:\n- **Order Block (OB)**\n- **IMB (Imbalance / FVG)**\n- **STB / BTS** (Sell to Buy / Buy to Sell)\n- **Breaker Block**\n- **Propulsion Block**\n- **Mitigation Block**\n- **Rejection Block**\n\n**Inducement** — оставленная ликвидность перед нашим POI. Она всегда является магнитом для цены и увеличивает вероятность того, что наша POI будет протестирована.\n\n## Правила валидации POI\n\n1. **POI должно снять ликвидность** — обязательное условие\n2. **Отсутствие ликвидности за POI** — за POI не должно быть больших пулов ликвидности, так как они могут выступать магнитом и прошить зону\n3. **Желательно, чтобы POI было не протестировано** — с каждым тестом шанс прошития выше\n4. **Наличие Inducement перед POI** — ликвидность-приманка перед зоной повышает вероятность теста\n\n## Применение\n\nPOI используется:\n- Как зона для входа в позицию\n- Для определения контекста на старшем таймфрейме\n- Как точка, внутри которой ищем подтверждение на младшем ТФ\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.595272",
+  "updated_at": "2026-03-22T22:05:44.595275",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "principles"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/principles/poi.md",
+  "file_hash": "caf5975b5e5f",
+  "status": "active"
+}

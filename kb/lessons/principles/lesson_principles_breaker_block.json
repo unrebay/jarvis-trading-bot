@@ -1,0 +1,24 @@
+{
+  "id": "lesson_principles_breaker_block",
+  "title": "Breaker Block",
+  "description": "Lesson on Breaker Block",
+  "category": "principles",
+  "level": "intermediate",
+  "content": "# Breaker Block\n\n## Определение\n\n**Breaker Block** — аналог ордер блоку, только полностью прошит Imbalance/FVG свечей.\n\n## Правила использования\n\n- Лучше всего торговать в связке **FVG 50% + Breaker**\n- Применять на любом таймфрейме\n- Использовать только со структурой\n- Стоп-лосс ставить за фитиль свечи\n\n## Особенности\n\nДанный вид зон спроса/предложения встречается довольно редко, поскольку требует специфических условий формирования — ордер блок, полностью прошитый имбалансом.\n\n## Связь с другими концептами\n\n- **Отличие от обычного OB**: обычный ордер блок не прошит FVG, Breaker — прошит полностью\n- **Связка с FVG**: наиболее эффективно работает в комбинации с зоной 50% FVG\n- Является одной из зон спроса/предложения (наряду с Mitigation Block, Rejection Block, Propulsion Block)\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.576370",
+  "updated_at": "2026-03-22T22:05:44.576374",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "principles"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/principles/breaker-block.md",
+  "file_hash": "5113577c14c1",
+  "status": "active"
+}

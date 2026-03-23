@@ -1,0 +1,24 @@
+{
+  "id": "lesson_market-mechanics_1h_of_inside_sessions",
+  "title": "1H OF Inside Sessions (Часовой поток приказов внутри сессий)",
+  "description": "Lesson on 1H OF Inside Sessions (Часовой поток приказов внутри сессий)",
+  "category": "market-mechanics",
+  "level": "intermediate",
+  "content": "# 1H OF Inside Sessions (Часовой поток приказов внутри сессий)\n\n## Определение\n\n**1H OF (1-Hour Order Flow)** — часовой поток приказов, который помогает работать не только от границ сессий, но и подбирать позиции уже внутри движения.\n\n## Применение\n\nЧасовой поток приказов помогает с **определением контекста для NY сессии**, где потребуется работа от фрактальных свингов Лондона.\n\n## Логика работы\n\nПри анализе 1H OF внутри сессии:\n\n1. Первый свинг Лондона (который снял AH) является **защищённым** — можно рассчитывать на снятие лишь локального Лондонского максимума в NY сессию\n2. Именно такие сделки будут наилучшими при работе внутри сессии\n3. **Поток приказов даёт чёткое понимание контекста**\n\n## Применение\n\n- Определить 1H OF после открытия Лондона\n- Использовать фрактальные свинги Лондона как ориентиры для NY сессии\n- Работать от защищённых свингов с чётким пониманием направления\n",
+  "learning_objectives": [],
+  "related_topics": [],
+  "related_rules": [],
+  "related_patterns": [],
+  "chart_examples": [],
+  "mistake_cases": [],
+  "estimated_read_time": 1,
+  "created_at": "2026-03-22T22:05:44.520734",
+  "updated_at": "2026-03-22T22:05:44.520737",
+  "author": "JARVIS Knowledge Base",
+  "tags": [
+    "market-mechanics"
+  ],
+  "source_file": "/sessions/tender-wizardly-gauss/mnt/jarvis-trading-bot/knowledge_raw/market-mechanics/1h-of-inside-sessions.md",
+  "file_hash": "3becf0d8c020",
+  "status": "active"
+}

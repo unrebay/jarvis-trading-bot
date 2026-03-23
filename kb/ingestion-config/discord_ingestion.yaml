@@ -1,0 +1,181 @@
+# Discord Channel Ingestion Configuration
+# Maps Discord channels to knowledge base entity types
+
+ingestion_sources:
+
+  - channel_id: "trading-lessons"
+    channel_name: "Trading Lessons"
+    description: "Educational content from Discord"
+    target_entity_type: "lesson"
+    mapping:
+      thread_title: "lesson.title"
+      first_message: "lesson.content"
+      media_attachments: "related_images"
+      reactions: "user_engagement"
+    deduplication:
+      enabled: true
+      strategy: "fuzzy_match_title"
+      threshold: 0.85
+    processing:
+      parse_markdown: true
+      extract_code_blocks: true
+      extract_links: true
+    enrichment:
+      - auto_categorize_from_content: true
+      - estimate_reading_time: true
+      - generate_learning_objectives: false  # Manual later
+    metadata:
+      source: "discord-trading-lessons"
+      auto_tagging: true
+
+  - channel_id: "chart-analysis"
+    channel_name: "Chart Analysis"
+    description: "Chart examples and pattern analysis"
+    target_entity_type: "chart_example"
+    mapping:
+      message_timestamp: "chart.date"
+      image_attachment: "chart.image_url"
+      message_text: "chart.description"
+      reactions: "chart.outcome"  # thumbs_up=winner, thumbs_down=loser
+    processing:
+      download_images: true
+      store_location: "kb/media/charts/"
+      image_optimization: true
+      max_dimension: 2400
+      quality: 80
+    enrichment:
+      - run_image_annotation: true
+      - detect_patterns: true
+      - extract_key_levels: true
+      - calculate_risk_reward: false  # Manual verification
+    metadata:
+      source: "discord-chart-analysis"
+
+  - channel_id: "pattern-library"
+    channel_name: "Pattern Library"
+    description: "Pattern reference and examples"
+    target_entity_type: "pattern"
+    mapping:
+      message_title: "pattern.name"
+      description_message: "pattern.description"
+      thread_replies: "pattern.examples"
+      pinned_messages: "pattern.identification_criteria"
+    deduplication:
+      enabled: true
+      strategy: "exact_match_name"
+    processing:
+      parse_nested_threads: true
+    enrichment:
+      - auto_categorize: true
+      - link_to_lessons: true
+
+  - channel_id: "mistakes-to-avoid"
+    channel_name: "Mistakes to Avoid"
+    description: "Common mistakes and how to prevent them"
+    target_entity_type: "mistake_case"
+    mapping:
+      post_title: "mistake.title"
+      description: "mistake.description"
+      analysis: "mistake.why_it_happens"
+      prevention_tips: "mistake.how_to_avoid"
+    enrichment:
+      - severity_assessment: true
+      - frequency_estimation: true
+      - rule_linking: true
+
+  - channel_id: "glossary"
+    channel_name: "Trading Glossary"
+    description: "Term definitions and explanations"
+    target_entity_type: "term"
+    mapping:
+      term_format: "{term} - {definition}"
+      context_mentions: "term.context"
+      related_terms: "term.related_terms"
+    parsing:
+      format: "plain_text_definition"
+      case_sensitive: false
+    deduplication:
+      enabled: true
+      strategy: "exact_match_term"
+
+# Global Discord Settings
+discord_settings:
+
+  # Rate limiting
+  rate_limit:
+    requests_per_minute: 30
+    batch_size: 100
+    retry_attempts: 3
+
+  # Message filtering
+  filtering:
+    exclude_bot_messages: true
+    exclude_system_messages: true
+    min_message_length: 50  # chars
+    require_content_type: false  # Allow text and media
+    exclude_patterns:
+      - "^@.*$"  # @mentions
+      - "^ping$"  # Ping messages
+
+  # Metadata extraction
+  metadata:
+    extract_author: true
+    extract_timestamp: true
+    extract_reactions: true
+    extract_thread_replies: true
+
+  # Media handling
+  media:
+    download_attachments: true
+    supported_types: ["image/png", "image/jpeg", "image/gif", "video/mp4", "text/plain"]
+    max_file_size_mb: 50
+    storage_location: "kb/media/"
+    thumbnail_generation: true
+
+  # Processing
+  processing:
+    parse_markdown: true
+    convert_to_markdown: false
+    extract_urls: true
+    validate_urls: true
+
+  # Deduplication defaults
+  deduplication_defaults:
+    enabled: true
+    strategy: "fuzzy_match_content"
+    threshold: 0.75
+    window_days: 30  # Check last 30 days for dupes
+
+  # Enrichment
+  enrichment:
+    auto_tagging: true
+    link_creation: true
+    language_detection: true
+    sentiment_analysis: false
+    topic_extraction: true
+
+  # Error handling
+  error_handling:
+    on_parse_error: "skip_message"  # skip_message | log_and_continue
+    on_enrichment_error: "skip_enrichment"
+    on_storage_error: "retry"
+    retry_strategy: "exponential_backoff"
+
+# Scheduling
+scheduling:
+  ingestion_frequency: "daily"
+  ingestion_time: "02:00"  # UTC, off-peak
+  batch_processing: true
+  parallel_channels: 3
+
+# Monitoring
+monitoring:
+  log_level: "info"
+  track_ingestion_stats: true
+  alert_on_failures: true
+  alert_threshold: 5  # failures to trigger alert
+
+# Version
+version: "1.0"
+created_at: "2026-03-22"
+last_updated: "2026-03-22"
