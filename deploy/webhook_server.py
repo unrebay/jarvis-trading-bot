@@ -1,17 +1,30 @@
 #!/usr/bin/env python3
 """
-JARVIS — GitHub Webhook Auto-Deploy Server
+JARVIS — Webhook Server (GitHub Deploy + TradingView Alerts)
 
-Listens for GitHub push events on the `production` branch and
-automatically pulls the latest code + restarts the bot service.
+Endpoints:
+  GET  /health   — liveness check
+  POST /deploy   — GitHub push event → auto-deploy (HMAC-SHA256 verified)
+  POST /alert    — TradingView alert → sends annotated chart to Telegram users
 
-No external dependencies — uses only Python stdlib.
+No external dependencies — pure Python stdlib.
 
-Config (via .env or environment):
-  WEBHOOK_SECRET  — GitHub webhook secret (required for security)
-  WEBHOOK_PORT    — port to listen on (default: 9000)
+Config (via /opt/jarvis/.env):
+  WEBHOOK_SECRET     — GitHub webhook HMAC secret
+  WEBHOOK_PORT       — port (default: 9000)
+  TELEGRAM_BOT_TOKEN — bot token for sending TV alert messages
+  SUPABASE_URL       — Supabase project URL
+  SUPABASE_KEY       — Supabase service role key
 
-Endpoint:  POST /deploy
+TradingView Alert JSON format (set in Pine Script alert message):
+  {
+    "symbol":    "{{ticker}}",
+    "timeframe": "{{interval}}",
+    "action":    "{{strategy.order.action}}",
+    "price":     {{close}},
+    "message":   "{{strategy.order.comment}}"
+  }
+  Payload URL: http://77.110.126.107:9000/alert
 """
 
 import hashlib
@@ -21,6 +34,7 @@ import logging
 import os
 import subprocess
 import sys
+import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
@@ -52,6 +66,45 @@ PORT           = int(os.getenv("WEBHOOK_PORT", "9000"))
 DEPLOY_SCRIPT  = str(Path(__file__).parent / "webhook-deploy.sh")
 BRANCH         = "production"
 
+# TradingView alert config (no secret needed — alerts come from TV servers)
+TELEGRAM_TOKEN  = os.getenv("TELEGRAM_BOT_TOKEN", "")
+SUPABASE_URL    = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY    = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY", "")
+
+
+# ── TradingView alert helpers ─────────────────────────────────────────────────
+
+def _get_alert_subscribers(symbol: str) -> list:
+    """Query Supabase for users who have this symbol in their watchlist."""
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return []
+    try:
+        url = f"{SUPABASE_URL}/rest/v1/user_watchlist?symbol=eq.{symbol}&active=eq.true&select=telegram_id"
+        req = urllib.request.Request(url, headers={
+            "apikey":        SUPABASE_KEY,
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+        })
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return json.loads(resp.read().decode())
+    except Exception as e:
+        log.warning(f"Supabase watchlist query failed: {e}")
+        return []
+
+
+def _send_telegram_message(chat_id: int, text: str) -> None:
+    """Send a plain text message via Telegram Bot API (stdlib only)."""
+    if not TELEGRAM_TOKEN:
+        log.warning("TELEGRAM_BOT_TOKEN not set — cannot send alert message")
+        return
+    try:
+        url  = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        data = json.dumps({"chat_id": chat_id, "text": text}).encode()
+        req  = urllib.request.Request(url, data=data,
+                                       headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req, timeout=10)
+    except Exception as e:
+        log.warning(f"Telegram sendMessage failed (chat {chat_id}): {e}")
+
 
 # ── Signature Verification ───────────────────────────────────────────────────
 
@@ -78,9 +131,63 @@ class WebhookHandler(BaseHTTPRequestHandler):
             self._respond(404, b"Not found")
 
     def do_POST(self):
-        if self.path != "/deploy":
+        if self.path == "/alert":
+            self._handle_tv_alert()
+        elif self.path == "/deploy":
+            self._handle_deploy()
+        else:
             self._respond(404, b"Not found")
+
+    def _handle_tv_alert(self):
+        """
+        Receive TradingView alert JSON and forward to subscribed Telegram users.
+
+        TV Alert message format (JSON):
+          {"symbol": "BTCUSDT", "timeframe": "4h", "action": "BUY",
+           "price": 85000, "message": "FVG filled, OB reached"}
+        """
+        length  = int(self.headers.get("Content-Length", 0))
+        payload = self.rfile.read(length)
+
+        try:
+            data = json.loads(payload)
+        except (json.JSONDecodeError, ValueError):
+            log.warning("TV alert: bad JSON payload")
+            self._respond(400, b"Bad JSON")
             return
+
+        symbol    = str(data.get("symbol", "")).upper()
+        timeframe = str(data.get("timeframe", "4h")).lower()
+        action    = str(data.get("action", "")).upper()
+        price     = data.get("price", "")
+        message   = str(data.get("message", ""))
+
+        log.info(f"📡 TV Alert: {symbol} {timeframe} {action} @ {price} — '{message}'")
+        self._respond(200, b"Alert received")
+
+        # Find subscribers and notify them
+        subscribers = _get_alert_subscribers(symbol)
+        if not subscribers:
+            log.info(f"  No subscribers for {symbol}")
+            return
+
+        log.info(f"  Notifying {len(subscribers)} subscriber(s)...")
+        for row in subscribers:
+            chat_id = row.get("telegram_id")
+            if not chat_id:
+                continue
+            # Build alert notification text
+            action_emoji = {"BUY": "🟢", "SELL": "🔴", "LONG": "🟢", "SHORT": "🔴"}.get(action, "📡")
+            text = (
+                f"{action_emoji} АЛЕРТ: {symbol} · {timeframe.upper()}\n"
+                + (f"Цена: {price}\n" if price else "")
+                + (f"Действие: {action}\n" if action else "")
+                + (f"\n{message}" if message else "")
+                + f"\n\n💡 /chart {symbol} {timeframe} — смотреть чарт"
+            )
+            _send_telegram_message(chat_id, text)
+
+    def _handle_deploy(self):
 
         # Read body
         length  = int(self.headers.get("Content-Length", 0))
@@ -136,13 +243,16 @@ class WebhookHandler(BaseHTTPRequestHandler):
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    log.info(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    log.info(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     log.info(f"  JARVIS Webhook Server starting")
-    log.info(f"  Port   : {PORT}")
-    log.info(f"  Branch : {BRANCH}")
-    log.info(f"  Secret : {'✅ set' if WEBHOOK_SECRET else '⚠️  NOT SET (insecure)'}")
-    log.info(f"  Script : {DEPLOY_SCRIPT}")
-    log.info(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    log.info(f"  Port      : {PORT}")
+    log.info(f"  Branch    : {BRANCH}")
+    log.info(f"  Secret    : {'✅ set' if WEBHOOK_SECRET else '⚠️  NOT SET (insecure)'}")
+    log.info(f"  Script    : {DEPLOY_SCRIPT}")
+    log.info(f"  TG Token  : {'✅ set' if TELEGRAM_TOKEN else '⚠️  not set (alerts disabled)'}")
+    log.info(f"  Supabase  : {'✅ set' if SUPABASE_URL else '⚠️  not set (alerts disabled)'}")
+    log.info(f"  Endpoints : POST /deploy  POST /alert  GET /health")
+    log.info(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
     server = HTTPServer(("0.0.0.0", PORT), WebhookHandler)
     try:

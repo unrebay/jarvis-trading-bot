@@ -473,6 +473,85 @@ class ClaudeClient:
             "model": model,
         }
 
+    def extract_memory_update(
+        self,
+        recent_messages: list,
+        current_memory: dict,
+    ) -> dict:
+        """
+        Extract new information from recent conversation and update user memory portrait.
+
+        Uses Haiku (cheap). Called every MEMORY_UPDATE_INTERVAL messages.
+        Analyses the last 10 messages and merges newly discovered facts into
+        the existing portrait (name, experience, style, topics, etc.)
+
+        Args:
+            recent_messages: [{"role": "user/assistant", "content": "..."}]
+            current_memory:  Current memory dict (from UserMemory.load())
+
+        Returns:
+            Updated memory dict (or current_memory unchanged on error).
+        """
+        # Build conversation snippet (last 10 messages, truncated)
+        conversation_text = ""
+        for msg in recent_messages[-10:]:
+            role = "Ученик" if msg["role"] == "user" else "JARVIS"
+            conversation_text += f"{role}: {msg['content'][:300]}\n"
+
+        current_json = json.dumps(current_memory, ensure_ascii=False, indent=2)
+
+        prompt = (
+            "Ты анализируешь диалог ученика с торговым ментором JARVIS.\n"
+            "Обнови «портрет ученика» на основе новых сообщений.\n\n"
+            f"ТЕКУЩИЙ ПОРТРЕТ:\n{current_json}\n\n"
+            f"ПОСЛЕДНИЕ СООБЩЕНИЯ:\n{conversation_text}\n"
+            "ПРАВИЛА ОБНОВЛЕНИЯ:\n"
+            "- Обновляй ТОЛЬКО поля, для которых есть явные свидетельства в диалоге\n"
+            "- Не придумывай — только то, что реально сказал или показал ученик\n"
+            "- profile.name — имя, если ученик представился или подписывался\n"
+            "- profile.experience — опыт (годы, «новичок», «2 года» и т.д.)\n"
+            "- profile.style — стиль торговли (swing/scalp/day/position)\n"
+            "- profile.pairs — инструменты, которые упоминал\n"
+            "- profile.timeframes — таймфреймы, которые упоминал\n"
+            "- profile.goals — цель обучения\n"
+            "- learning.topics_known — концепты, которые ученик уже понимает\n"
+            "- learning.topics_struggling — темы, где путается или переспрашивает\n"
+            "- learning.current_focus — тема, которую изучает прямо сейчас\n"
+            "- personality.tone — «formal» / «informal» / «mixed» по стилю речи\n"
+            "- personality.traits — черты характера (прямой, нетерпеливый, аналитический...)\n"
+            "- conversations.summary — краткое резюме ВСЕГО что знаешь об ученике (2-4 предложения, "
+            "включи информацию из предыдущего summary)\n\n"
+            "Верни ТОЛЬКО валидный JSON обновлённого портрета (без markdown блоков, без пояснений):"
+        )
+
+        def _call():
+            return self.client.messages.create(
+                model=HAIKU,
+                max_tokens=1024,
+                system=[{
+                    "type": "text",
+                    "text": (
+                        "Ты аналитик данных. Извлекаешь структурированную информацию "
+                        "о пользователе из диалога. Отвечай ТОЛЬКО валидным JSON."
+                    ),
+                }],
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+        try:
+            response = self._retry_with_backoff(_call)
+            text = response.content[0].text.strip()
+            # Strip markdown code fences if present
+            if "```json" in text:
+                text = text.split("```json")[1].split("```")[0]
+            elif "```" in text:
+                text = text.split("```")[1].split("```")[0]
+            updated = json.loads(text.strip())
+            return updated
+        except Exception as e:
+            print(f"⚠️ Memory extraction error: {e}")
+            return current_memory  # return unchanged on any error
+
     def clear_cache(self):
         """
         Очистить локальный кеш системного промпта.

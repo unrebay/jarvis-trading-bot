@@ -2,16 +2,21 @@
 JARVIS - Trading Education Bot
 Professional AI teacher for trading education (ICT/SMC)
 
-v2.3 — Visual chart analysis:
-- ChartAnnotator: Claude Vision detects FVG, OB, BOS, CHoCH, S/R
-- ChartDrawer: PIL draws annotations on chart image
-- Returns annotated image + text analysis to Telegram user
-- /analyze command added
+v2.5 — Live charts + Education system:
+- ChartGenerator: live OHLCV charts via yfinance + mplfinance (dark theme)
+- /chart SYMBOL TF → generates live chart + ICT/SMC annotation
+- LessonManager: /lesson /quiz /progress structured ICT/SMC curriculum
+- /quiz → native Telegram QUIZ polls (auto-checks answer + explanation)
+- /watch → user watchlist + TradingView webhook alert integration
+- send_alert_chart() → proactive annotated chart when TV alert fires
 
-v2.2 — Fixed architecture:
-- Single ClaudeClient (no double Anthropic instantiation)
-- Clean dependency injection chain
-- CostManager guards all API calls
+v2.4 — Persistent student memory:
+- UserMemory: per-user portrait stored in Supabase (user_memory table)
+- Loaded before every message → JARVIS remembers name, experience, style
+- Updated every 5 messages via Haiku (async, after response sent)
+
+v2.3 — Visual chart analysis (ChartAnnotator + ChartDrawer)
+v2.2 — Fixed architecture (single ClaudeClient, CostManager)
 """
 
 import os
@@ -63,29 +68,46 @@ class JarvisBot:
 
     def _register_handlers(self):
         """Register all command and message handlers."""
-        self.application.add_handler(CommandHandler("start",   handler.handle_start))
-        self.application.add_handler(CommandHandler("help",    handler.handle_help))
-        self.application.add_handler(CommandHandler("status",  handler.handle_status))
+        # ── Core ──
+        self.application.add_handler(CommandHandler("start",    handler.handle_start))
+        self.application.add_handler(CommandHandler("help",     handler.handle_help))
+        self.application.add_handler(CommandHandler("status",   handler.handle_status))
+
+        # ── Charts ──
+        self.application.add_handler(CommandHandler("chart",    handler.handle_chart))
+
+        # ── Education ──
+        self.application.add_handler(CommandHandler("lesson",   handler.handle_lesson))
+        self.application.add_handler(CommandHandler("quiz",     handler.handle_quiz))
+        self.application.add_handler(CommandHandler("progress", handler.handle_progress))
+
+        # ── Watchlist ──
+        self.application.add_handler(CommandHandler("watch",    handler.handle_watch))
+
+        # ── Photo analysis ──
+        self.application.add_handler(
+            MessageHandler(filters.PHOTO & filters.CaptionRegex(r'^/analyze'), handler.handle_photo)
+        )
         self.application.add_handler(
             MessageHandler(filters.PHOTO, handler.handle_photo)
         )
-        self.application.add_handler(
-            # /analyze with attached photo (caption command)
-            MessageHandler(filters.PHOTO & filters.CaptionRegex(r'^/analyze'), handler.handle_photo)
-        )
+
+        # ── Free text ──
         self.application.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_message)
         )
 
     def run(self):
         """Start bot polling."""
-        print("🤖 JARVIS Bot v2.3 starting...")
-        print("   ├─ Claude:    ClaudeClient (Haiku text / Opus vision, cache ON)")
-        print("   ├─ RAG:       Supabase keyword search (61 lessons)")
-        print("   ├─ Budget:    CostManager ($1.00/day, FULL→LITE→OFFLINE)")
-        print("   ├─ Vision:    ChartAnnotator + ChartDrawer (FVG, OB, BOS, S/R)")
-        print("   ├─ Supabase:  conversations + users")
-        print("   └─ Telegram:  polling mode")
+        print("🤖 JARVIS Bot v2.5 starting...")
+        print("   ├─ Claude:   Haiku (all, dev mode — switch to Sonnet/Opus for prod)")
+        print("   ├─ Charts:   ChartGenerator (yfinance+mplfinance) + ChartAnnotator + ChartDrawer")
+        print("   ├─ Lessons:  LessonManager (/lesson /quiz /progress)")
+        print("   ├─ Memory:   UserMemory (Supabase, updates every 5 msgs)")
+        print("   ├─ Watch:    user_watchlist + TradingView webhook /alert")
+        print("   ├─ Budget:   CostManager ($1.00/day, FULL→LITE→OFFLINE)")
+        print("   ├─ RAG:      Supabase keyword search (61 lessons)")
+        print("   └─ Telegram: polling mode")
         self.application.run_polling(drop_pending_updates=True)
 
 

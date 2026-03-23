@@ -1,12 +1,16 @@
 """
-telegram_handler.py — Обработка Telegram сообщений (v2.3)
+telegram_handler.py — Обработка Telegram сообщений (v2.4)
+
+Changes v2.4:
+- UserMemory: persistent student portrait stored in Supabase
+  → loaded before every message → injected as context into Claude
+  → updated every 5 messages via Haiku (async, after response sent)
+  → JARVIS теперь помнит имя, опыт, стиль, темы ученика между сессиями
 
 Changes v2.3 (iMac):
-- Photo analysis now uses ChartAnnotator + ChartDrawer
-  → sends ANNOTATED IMAGE back (FVG, S/R, BOS/CHoCH drawn on chart)
-  → plus text analysis with ICT/SMC vocabulary
-- /analyze command added (same as sending a photo)
-- ImageHandler kept for backward-compat but not used for photos
+- Photo analysis: ChartAnnotator + ChartDrawer (annotated JPEG + text)
+- /analyze command added
+- ImageHandler kept for backward-compat
 
 Previous fixes (v2.2):
 - Баг #1: неправильные параметры ask_mentor()
@@ -15,6 +19,7 @@ Previous fixes (v2.2):
 - Интеграция CostManager (FULL/LITE/OFFLINE режимы)
 """
 
+import asyncio
 import io
 import os
 from telegram import Update, InputFile
@@ -24,9 +29,13 @@ from supabase import Client
 from .rag_search import RAGSearch
 from .claude_client import ClaudeClient
 from .image_handler import ImageHandler
+from telegram import Poll
 from .chart_annotator import ChartAnnotator
 from .chart_drawer import ChartDrawer
+from .chart_generator import ChartGenerator
+from .lesson_manager import LessonManager
 from .cost_manager import cost_manager, BotMode
+from .user_memory import UserMemory
 
 
 class TelegramHandler:
@@ -41,6 +50,15 @@ class TelegramHandler:
 
         # ImageHandler kept for legacy / fallback
         self.image_handler = ImageHandler(self.claude, supabase)
+
+        # Persistent user memory / student portrait (v2.4)
+        self.user_memory = UserMemory(supabase)
+
+        # Live chart generation (v2.5)
+        self.chart_generator = ChartGenerator()
+
+        # Lesson / quiz / progress system (v2.5)
+        self.lesson_manager = LessonManager(claude_client, rag)
 
     # ── Команды ───────────────────────────────────────────────────────────────
 
@@ -63,18 +81,25 @@ class TelegramHandler:
     async def handle_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         """Handle /help command."""
         await update.message.reply_text(
-            "📖 КОМАНДЫ:\n\n"
-            "/start   — начать диалог\n"
-            "/help    — эта справка\n"
-            "/status  — бюджет и режим работы бота\n"
-            "/analyze — анализ графика (отправь фото с командой)\n\n"
-            "🎓 УРОВНИ ОБУЧЕНИЯ (отвечаю под твой уровень):\n"
-            "• Beginner — основы (инструменты, терминология)\n"
-            "• Intermediate — принципы (структура, ликвидность, POI)\n"
-            "• Advanced — мульти-ТФ, entry models\n"
-            "• Professional — institutional flow, psychology\n\n"
-            "🖼 Для анализа графика: отправь скриншот.\n"
-            "Я нарисую FVG, OB, BOS/CHoCH, S/R прямо на твоём графике!"
+            "📖 КОМАНДЫ JARVIS:\n\n"
+            "💬 ОБЩЕНИЕ\n"
+            "/start    — начать\n"
+            "/help     — эта справка\n"
+            "/status   — бюджет и режим бота\n"
+            "/progress — мой прогресс обучения\n\n"
+            "📈 ГРАФИКИ\n"
+            "/chart BTCUSDT 4h  — сгенерировать лайв чарт с анализом\n"
+            "/chart EURUSD 1d   — любой инструмент и таймфрейм\n"
+            "/analyze           — анализ загруженного скриншота\n\n"
+            "🎓 ОБУЧЕНИЕ\n"
+            "/lesson FVG        — урок по теме\n"
+            "/lesson            — список всех тем\n"
+            "/quiz FVG          — тест: 3 вопроса с проверкой\n\n"
+            "📡 СЛЕЖЕНИЕ\n"
+            "/watch add BTCUSDT 4h  — добавить в watchlist\n"
+            "/watch remove BTCUSDT  — удалить\n"
+            "/watch                 — показать watchlist\n\n"
+            "🖼 Просто отправь скриншот — нарисую FVG, OB, BOS/CHoCH на графике!"
         )
 
     async def handle_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -97,6 +122,357 @@ class TelegramHandler:
             f"🖼 Анализов графиков: {summary['vision_calls']}"
         )
 
+    # ── /chart — live chart generation + auto-analysis ───────────────────────
+
+    async def handle_chart(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        /chart [symbol] [timeframe]
+        Generates a live candlestick chart, then runs ICT/SMC annotation.
+        Examples: /chart BTCUSDT 4h   /chart EURUSD 1d   /chart NQ 1h
+        """
+        user_id = update.effective_user.id
+        self._ensure_user_exists(user_id, update.effective_user.username or "Anonymous")
+
+        args = context.args or []
+        if not args:
+            await update.message.reply_text(
+                "📈 Использование: /chart СИМВОЛ ТАЙМФРЕЙМ\n\n"
+                "Примеры:\n"
+                "  /chart BTCUSDT 4h\n"
+                "  /chart EURUSD 1d\n"
+                "  /chart NQ 1h\n"
+                "  /chart GOLD 1w\n\n"
+                "Таймфреймы: 1m 5m 15m 1h 4h 1d 1w"
+            )
+            return
+
+        if not cost_manager.can_use_vision():
+            await update.message.reply_text("🟡 Лимит анализов исчерпан. Попробуй позже.")
+            return
+
+        symbol    = args[0].upper()
+        timeframe = args[1].lower() if len(args) > 1 else "4h"
+
+        await update.message.chat.send_action("upload_photo")
+        await update.message.reply_text(f"📊 Генерирую чарт {symbol} {timeframe.upper()}...")
+
+        # 1. Generate live chart
+        gen_result = self.chart_generator.generate(symbol, timeframe)
+        if not gen_result["success"]:
+            await update.message.reply_text(f"❌ {gen_result['error']}")
+            return
+
+        image_bytes = gen_result["image"]
+        info        = gen_result["info"]
+
+        # 2. Load user memory for context
+        memory     = self.user_memory.load(user_id)
+        user_level = memory.get("learning", {}).get("level", "Intermediate")
+
+        # 3. Run ICT/SMC annotation on the generated chart
+        ann_ctx = {
+            "instrument":    symbol,
+            "timeframe":     timeframe,
+            "student_level": user_level,
+        }
+        ann_result    = self.chart_annotator.analyze_chart(image_bytes, context=ann_ctx)
+        drawing_instr = ann_result.get("drawing_instructions", {}) if ann_result.get("success") else {}
+        analysis_text = ann_result.get("analysis_text", "") if ann_result.get("success") else ""
+
+        # 4. Draw annotations on chart
+        annotated_bytes = image_bytes
+        has_drawings = any([
+            drawing_instr.get("fvg_zones"),
+            drawing_instr.get("sr_levels"),
+            drawing_instr.get("bos_markers"),
+            drawing_instr.get("order_blocks"),
+            drawing_instr.get("liquidity_sweeps"),
+        ])
+        if has_drawings:
+            try:
+                from .chart_drawer import ChartDrawer
+                drawer = ChartDrawer(image_bytes)
+                annotated_bytes = drawer.draw(drawing_instr)
+            except Exception as draw_err:
+                print(f"⚠️ Drawing error: {draw_err}")
+
+        # 5. Build caption
+        change_sign = "+" if info["change_pct"] >= 0 else ""
+        price_line  = f"{info['last_price']:,.4f}  ({change_sign}{info['change_pct']:.2f}%)"
+        header      = f"📊 {symbol} · {timeframe.upper()} · {price_line}"
+        caption     = f"{header}\n\n{analysis_text}"[:1020]
+
+        # 6. Send annotated chart
+        try:
+            await update.message.reply_photo(
+                photo   = InputFile(io.BytesIO(annotated_bytes), filename=f"{symbol}_{timeframe}.jpg"),
+                caption = caption,
+            )
+        except Exception as e:
+            print(f"⚠️ reply_photo failed: {e}")
+            await update.message.reply_text(caption)
+
+        # 7. Update memory counter
+        memory = self.user_memory.increment(memory)
+        self.user_memory.save(user_id, memory)
+
+    # ── /lesson ────────────────────────────────────────────────────────────────
+
+    async def handle_lesson(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        /lesson [topic]
+        Generates a structured ICT/SMC lesson on the requested topic.
+        /lesson alone → shows list of all available topics.
+        """
+        user_id = update.effective_user.id
+        self._ensure_user_exists(user_id, update.effective_user.username or "Anonymous")
+
+        args  = context.args or []
+        topic = " ".join(args).strip()
+
+        if not topic:
+            await update.message.reply_text(self.lesson_manager.get_topics_list())
+            return
+
+        if not cost_manager.can_use_api():
+            await update.message.reply_text("⚠️ Дневной лимит API исчерпан.")
+            return
+
+        await update.message.chat.send_action("typing")
+        await update.message.reply_text(f"📖 Готовлю урок: {topic}...")
+
+        memory     = self.user_memory.load(user_id)
+        user_level = memory.get("learning", {}).get("level", "Intermediate")
+
+        lesson_text = self.lesson_manager.get_lesson(topic, user_level)
+        await update.message.reply_text(lesson_text)
+
+        # Update memory: add topic to current_focus
+        memory["learning"]["current_focus"] = topic
+        memory = self.user_memory.increment(memory)
+        self.user_memory.save(user_id, memory)
+
+    # ── /quiz — Telegram native quiz polls ─────────────────────────────────────
+
+    async def handle_quiz(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        /quiz [topic]
+        Generates 3 questions and sends them as native Telegram QUIZ polls
+        (auto-checking correct answer with explanation).
+        """
+        user_id = update.effective_user.id
+        self._ensure_user_exists(user_id, update.effective_user.username or "Anonymous")
+
+        args  = context.args or []
+        topic = " ".join(args).strip()
+
+        if not topic:
+            await update.message.reply_text(
+                "🧠 Использование: /quiz ТЕМА\n\n"
+                "Примеры:\n"
+                "  /quiz FVG\n"
+                "  /quiz Order Block\n"
+                "  /quiz Market Structure\n\n"
+                "Список тем: /lesson"
+            )
+            return
+
+        if not cost_manager.can_use_api():
+            await update.message.reply_text("⚠️ Дневной лимит API исчерпан.")
+            return
+
+        await update.message.chat.send_action("typing")
+        await update.message.reply_text(f"🧠 Генерирую тест по теме: {topic}...")
+
+        memory     = self.user_memory.load(user_id)
+        user_level = memory.get("learning", {}).get("level", "Intermediate")
+
+        questions = self.lesson_manager.get_quiz_questions(topic, user_level)
+
+        if not questions:
+            await update.message.reply_text(
+                f"❌ Не удалось сгенерировать тест по теме '{topic}'.\n"
+                "Попробуй другую тему или повтори позже."
+            )
+            return
+
+        await update.message.reply_text(
+            f"🧠 Тест: {topic}\n{len(questions)} вопроса — отвечай!"
+        )
+
+        # Send each question as a native Telegram QUIZ poll
+        for i, q in enumerate(questions, 1):
+            try:
+                await update.message.reply_poll(
+                    question          = f"Вопрос {i}: {q['question']}",
+                    options           = q["options"],
+                    type              = Poll.QUIZ,
+                    correct_option_id = q["correct_option_id"],
+                    explanation       = q.get("explanation", ""),
+                    is_anonymous      = False,
+                    open_period       = 60,   # 60 seconds to answer
+                )
+            except Exception as e:
+                # Fallback: send as text if poll fails
+                print(f"⚠️ Poll send error (q{i}): {e}")
+                options_text = "\n".join(f"  {o}" for o in q["options"])
+                correct      = q["options"][q["correct_option_id"]]
+                await update.message.reply_text(
+                    f"❓ {q['question']}\n{options_text}\n\n✅ Ответ: {correct}\n{q.get('explanation','')}"
+                )
+
+        # Update memory
+        memory = self.user_memory.increment(memory)
+        self.user_memory.save(user_id, memory)
+
+    # ── /progress ──────────────────────────────────────────────────────────────
+
+    async def handle_progress(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Handle /progress — show learning progress from user memory."""
+        user_id = update.effective_user.id
+        self._ensure_user_exists(user_id, update.effective_user.username or "Anonymous")
+        memory = self.user_memory.load(user_id)
+        progress_text = self.lesson_manager.format_progress(memory)
+        await update.message.reply_text(progress_text)
+
+    # ── /watch — user watchlist management ─────────────────────────────────────
+
+    async def handle_watch(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        /watch                         — show watchlist
+        /watch add BTCUSDT [4h]        — add symbol
+        /watch remove BTCUSDT          — remove symbol
+        """
+        user_id = update.effective_user.id
+        self._ensure_user_exists(user_id, update.effective_user.username or "Anonymous")
+
+        args = context.args or []
+
+        if not args or args[0].lower() not in ("add", "remove"):
+            # Show current watchlist
+            items = self._get_watchlist(user_id)
+            if not items:
+                await update.message.reply_text(
+                    "📡 Watchlist пуст.\n\n"
+                    "Добавить: /watch add BTCUSDT 4h\n"
+                    "При срабатывании TradingView алерта — JARVIS пришлёт анализ!"
+                )
+            else:
+                lines = ["📡 Твой watchlist:\n"]
+                for item in items:
+                    lines.append(f"  • {item['symbol']} · {item['timeframe'].upper()}")
+                lines.append("\nУдалить: /watch remove BTCUSDT")
+                await update.message.reply_text("\n".join(lines))
+            return
+
+        action = args[0].lower()
+
+        if action == "add":
+            if len(args) < 2:
+                await update.message.reply_text("Использование: /watch add СИМВОЛ [таймфрейм]\nПример: /watch add BTCUSDT 4h")
+                return
+            symbol    = args[1].upper()
+            timeframe = args[2].lower() if len(args) > 2 else "4h"
+            self._add_watchlist(user_id, symbol, timeframe)
+            await update.message.reply_text(
+                f"✅ {symbol} · {timeframe.upper()} добавлен в watchlist!\n\n"
+                f"Настрой алерт в TradingView → webhook на http://77.110.126.107:9000/alert\n"
+                f"JARVIS пришлёт анализ когда сработает."
+            )
+
+        elif action == "remove":
+            if len(args) < 2:
+                await update.message.reply_text("Использование: /watch remove СИМВОЛ")
+                return
+            symbol = args[1].upper()
+            self._remove_watchlist(user_id, symbol)
+            await update.message.reply_text(f"🗑 {symbol} удалён из watchlist.")
+
+    # ── Watchlist DB helpers ───────────────────────────────────────────────────
+
+    def _get_watchlist(self, user_id: int) -> list:
+        try:
+            res = self.supabase.table("user_watchlist").select(
+                "symbol, timeframe"
+            ).eq("telegram_id", user_id).eq("active", True).execute()
+            return res.data or []
+        except Exception as e:
+            print(f"⚠️ Watchlist get error: {e}")
+            return []
+
+    def _add_watchlist(self, user_id: int, symbol: str, timeframe: str) -> None:
+        try:
+            self.supabase.table("user_watchlist").upsert(
+                {"telegram_id": user_id, "symbol": symbol, "timeframe": timeframe, "active": True},
+                on_conflict="telegram_id,symbol",
+            ).execute()
+        except Exception as e:
+            print(f"⚠️ Watchlist add error: {e}")
+
+    def _remove_watchlist(self, user_id: int, symbol: str) -> None:
+        try:
+            self.supabase.table("user_watchlist").update(
+                {"active": False}
+            ).eq("telegram_id", user_id).eq("symbol", symbol).execute()
+        except Exception as e:
+            print(f"⚠️ Watchlist remove error: {e}")
+
+    # ── Proactive chart send (called by TV alert handler) ─────────────────────
+
+    async def send_alert_chart(
+        self,
+        bot,
+        telegram_id: int,
+        symbol: str,
+        timeframe: str,
+        alert_message: str = "",
+    ) -> None:
+        """
+        Called when a TradingView alert fires for a watchlisted symbol.
+        Generates chart, annotates it, sends to user's Telegram chat.
+        """
+        try:
+            gen_result = self.chart_generator.generate(symbol, timeframe)
+            if not gen_result["success"]:
+                await bot.send_message(
+                    chat_id = telegram_id,
+                    text    = f"📡 Алерт: {symbol} · {timeframe.upper()}\n⚠️ {gen_result['error']}\n\n{alert_message}",
+                )
+                return
+
+            image_bytes = gen_result["image"]
+            info        = gen_result["info"]
+
+            # Annotate
+            ann_result    = self.chart_annotator.analyze_chart(image_bytes, context={"instrument": symbol, "timeframe": timeframe})
+            drawing_instr = ann_result.get("drawing_instructions", {}) if ann_result.get("success") else {}
+            analysis_text = ann_result.get("analysis_text", "") if ann_result.get("success") else ""
+
+            annotated_bytes = image_bytes
+            if any(drawing_instr.get(k) for k in ("fvg_zones", "sr_levels", "bos_markers", "order_blocks")):
+                try:
+                    from .chart_drawer import ChartDrawer
+                    annotated_bytes = ChartDrawer(image_bytes).draw(drawing_instr)
+                except Exception:
+                    pass
+
+            change_sign = "+" if info["change_pct"] >= 0 else ""
+            caption = (
+                f"📡 АЛЕРТ: {symbol} · {timeframe.upper()}\n"
+                f"{info['last_price']:,.4f}  ({change_sign}{info['change_pct']:.2f}%)\n"
+                + (f"\n{alert_message}\n" if alert_message else "")
+                + (f"\n{analysis_text}" if analysis_text else "")
+            )[:1020]
+
+            await bot.send_photo(
+                chat_id = telegram_id,
+                photo   = InputFile(io.BytesIO(annotated_bytes), filename=f"{symbol}_alert.jpg"),
+                caption = caption,
+            )
+
+        except Exception as e:
+            print(f"⚠️ Alert chart send error (user {telegram_id}): {e}")
+
     # ── Текстовые сообщения ────────────────────────────────────────────────────
 
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -118,36 +494,53 @@ class TelegramHandler:
         await update.message.chat.send_action("typing")
 
         try:
-            # 1. История диалога
+            # 1. Загружаем портрет ученика (v2.4)
+            memory      = self.user_memory.load(user_id)
+            memory_ctx  = self.user_memory.format_as_context(memory)
+
+            # 2. История диалога
             history = self._load_history(user_id, limit=20)
 
-            # 2. Поиск по базе знаний
+            # 3. Поиск по базе знаний
             search_results = self.rag.search(text, top_k=3)
             context_str    = self.rag.format_context(search_results)
 
-            # 3. Уровень пользователя
-            user_level = self._get_user_level(user_id)
+            # 4. Собираем полный knowledge_context (память + база знаний)
+            full_context_parts = []
+            if memory_ctx:
+                full_context_parts.append(memory_ctx)
+            if context_str:
+                full_context_parts.append(context_str)
+            full_context = "\n\n".join(full_context_parts) or None
 
-            # ─── БАГ #1 ИСПРАВЛЕН ───────────────────────────────────────────
-            # Было: ask_mentor(text=..., context=..., history=...)
-            # Стало: ask_mentor(user_message=..., history=..., knowledge_context=...)
+            # 5. Уровень: из памяти (актуальнее чем из bot_users)
+            user_level = memory.get("learning", {}).get("level") or self._get_user_level(user_id)
+
             response = self.claude.ask_mentor(
                 user_message      = text,
                 history           = history,
                 level             = user_level,
-                knowledge_context = context_str if context_str else None
+                knowledge_context = full_context,
             )
-            # ────────────────────────────────────────────────────────────────
 
-            # 4. Сохранение в БД
+            # 6. Сохранение в БД
             self._save_message(user_id, "user",      text)
             self._save_message(user_id, "assistant", response)
             self._increment_user_messages(user_id)
 
-            # 5. Предупреждение о бюджете
-            warning = cost_manager.get_cost_warning()
+            # 7. Обновляем счётчик памяти и сохраняем
+            memory = self.user_memory.increment(memory)
+            self.user_memory.save(user_id, memory)
 
-            reply = response
+            # 8. Асинхронное обновление портрета каждые N сообщений (v2.4)
+            if self.user_memory.should_update(memory):
+                asyncio.create_task(
+                    self._update_memory_async(user_id, memory)
+                )
+
+            # 9. Предупреждение о бюджете
+            warning = cost_manager.get_cost_warning()
+            reply   = response
             if warning:
                 reply += f"\n\n{warning}"
 
@@ -160,6 +553,26 @@ class TelegramHandler:
                 f"⚠️ Произошла ошибка. Попробуй ещё раз.\n`{str(e)[:80]}`",
                 parse_mode="Markdown"
             )
+
+    # ── Memory update (background task) ──────────────────────────────────────
+
+    async def _update_memory_async(self, user_id: int, current_memory: dict) -> None:
+        """
+        Background task: run Haiku to extract new portrait facts from
+        recent conversation, then merge + save back to Supabase.
+        Called via asyncio.create_task() — never blocks the response.
+        """
+        try:
+            history = self._load_history(user_id, limit=10)
+            if not history:
+                return
+            updated_raw = self.claude.extract_memory_update(history, current_memory)
+            merged      = self.user_memory.apply_update(current_memory, updated_raw)
+            self.user_memory.save(user_id, merged)
+            print(f"✅ Memory updated for user {user_id} "
+                  f"(msg #{current_memory['conversations']['total_messages']})")
+        except Exception as e:
+            print(f"⚠️ Async memory update error (user {user_id}): {e}")
 
     # ── Фото (анализ графиков с визуальными аннотациями) ─────────────────────
 
@@ -188,6 +601,9 @@ class TelegramHandler:
         caption = update.message.caption or ""
 
         try:
+            # 0. Загружаем портрет ученика (v2.4)
+            memory = self.user_memory.load(user_id)
+
             # 1. Скачиваем фото (берём максимальное качество)
             photo = update.message.photo[-1]
             file  = await context.bot.get_file(photo.file_id)
@@ -199,10 +615,12 @@ class TelegramHandler:
             await update.message.reply_text("🔍 Анализирую ICT/SMC структуру...")
 
             # 2. Анализ через ChartAnnotator (Claude Vision)
-            ctx = {}
+            ctx: dict = {}
             if caption:
-                # Пытаемся извлечь инструмент/таймфрейм из подписи
                 ctx["instrument"] = caption
+            # Передаём уровень ученика чтобы адаптировать глубину анализа
+            user_level = memory.get("learning", {}).get("level", "Intermediate")
+            ctx["student_level"] = user_level
             result = self.chart_annotator.analyze_chart(image_bytes, context=ctx)
 
             if not result.get("success"):
@@ -274,12 +692,15 @@ class TelegramHandler:
                 await update.message.reply_text(reply_text)
 
             # 6. Сохраняем в БД
-            patterns_summary = ", ".join(
-                p.pattern_name for p in result.get("patterns", [])
-            ) or "none"
             self._save_message(user_id, "user",      f"[Chart] {caption or 'no caption'}")
             self._save_message(user_id, "assistant", reply_text[:500])
             self._increment_user_messages(user_id)
+
+            # 7. Обновляем счётчик памяти (v2.4)
+            memory = self.user_memory.increment(memory)
+            self.user_memory.save(user_id, memory)
+            if self.user_memory.should_update(memory):
+                asyncio.create_task(self._update_memory_async(user_id, memory))
 
         except Exception as e:
             print(f"❌ Photo error: {e}")

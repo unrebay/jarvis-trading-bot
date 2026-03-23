@@ -3,3 +3,8 @@ python-dotenv==1.0.0
 anthropic==0.49.0
 supabase>=2.0.0
 Pillow>=10.0.0
+# Live chart generation (v2.5)
+yfinance>=0.2.18
+mplfinance>=0.12.10b0
+pandas>=2.0.0
+matplotlib>=3.7.0
