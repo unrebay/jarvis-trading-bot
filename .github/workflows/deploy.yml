@@ -23,16 +23,17 @@ jobs:
             echo "── Pulling latest code..."
             git pull origin production
 
-            echo "── Installing/updating dependencies..."
-            venv/bin/pip install -r requirements.txt -q
-            # gotrue 2.12.x uses proxy= which breaks with httpx>=0.28 — force pin
-            venv/bin/pip install httpx==0.27.2 --force-reinstall -q
+            echo "── Installing dependencies..."
+            # httpx pinned to 0.27.2 — required for gotrue 2.9.1 compatibility
+            # --no-deps bypasses python-telegram-bot==20.7 conflict check (works at runtime)
+            venv/bin/pip install -r requirements.txt -q --no-deps
+            venv/bin/pip install httpx==0.27.2 --force-reinstall --no-deps -q
 
             echo "── Restarting bot..."
             systemctl restart jarvis-bot
             sleep 3
 
             echo "── Status:"
-            systemctl status jarvis-bot --no-pager -l
+            systemctl status jarvis-bot --no-pager -l | head -8
 
             echo "✅ Deploy complete!"
