@@ -316,9 +316,8 @@ class ClaudeClient:
         )
 
         def _call_sonnet():
-            # Dev mode: using Haiku. Switch to SONNET for production quality.
             return self.client.messages.create(
-                model=HAIKU,
+                model=SONNET,
                 max_tokens=2048,
                 system=[
                     {
@@ -392,9 +391,8 @@ class ClaudeClient:
         full_prompt = prompt + context_str
 
         def _call_opus():
-            # Dev mode: using Haiku. Switch to OPUS for production quality.
             return self.client.messages.create(
-                model=HAIKU,
+                model=OPUS,
                 max_tokens=max_tokens,
                 system=[
                     self._build_cached_system(),
