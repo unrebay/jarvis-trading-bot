@@ -1,0 +1,45 @@
+name: Discord Stream Monitor
+
+on:
+  schedule:
+    # Every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no writes)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  check-new-lessons:
+    name: Check for new stream recordings
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run discord monitor on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "🎬  Discord Monitor | $(date '+%Y-%m-%d %H:%M:%S %Z')"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            cd ~/jarvis-trading-bot
+
+            DRY_RUN_FLAG=""
+            if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+              DRY_RUN_FLAG="--dry-run"
+              echo "Mode: DRY RUN"
+            fi
+
+            source venv/bin/activate 2>/dev/null || true
+            python scripts/discord_monitor.py $DRY_RUN_FLAG
+
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "✅ Done"

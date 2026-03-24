@@ -34,6 +34,7 @@ node_modules/
 
 # Bot runtime data (cost tracking, session files)
 data/
+!data/video_manifest.json
 *.json.bak
 
 # SSH keys (never commit)
