@@ -5,7 +5,19 @@
 
 ---
 
-## 📁 Mac (Local Machine)
+## 🌿 Git Branch Strategy
+
+| Branch | Device | Role |
+|--------|--------|------|
+| `main` | VPS / any | **Production** — стабильный код, только финальные merge-ы. VPS работает с этой веткой. |
+| `macbook` | MacBook | **Daily dev** — разработка фич, правки бота, тесты. PR → main. |
+| `imac` | iMac | **Heavy tasks** — видео-транскрипции (Whisper), embeddings, Notion ingestion, аналитика. PR → main. |
+
+**Правило:** `macbook` и `imac` → PR → `main` → автодеплой на VPS.
+
+---
+
+## 📁 MacBook (ветка `macbook`)
 
 | What | Path |
 |------|------|
@@ -26,7 +38,22 @@
 
 ---
 
-## 🖥️ VPS (77.110.126.107)
+## 🍎 iMac (ветка `imac`)
+
+| What | Path |
+|------|------|
+| Project root | `/Users/andy/jarvis-trading-bot` (ветка `imac`) |
+| Whisper setup | `scripts/setup_whisper.sh` |
+| Video ingestion | `scripts/video_ingestion.py` |
+| Notion ingestion | `scripts/notion_ingestion.py` |
+| Embeddings filler | `fill_embeddings.py` |
+| Transcribed videos | `data/video_manifest.json` |
+
+**iMac-only задачи:** транскрипция видео (Whisper Metal GPU), генерация embeddings (OpenAI), Notion → Supabase sync.
+
+---
+
+## 🖥️ VPS (77.110.126.107, ветка `main`)
 
 | What | Path |
 |------|------|
@@ -52,7 +79,7 @@
 | Service | Details |
 |---------|---------|
 | **Telegram Bot** | Bot token in `.env` → `TELEGRAM_BOT_TOKEN` |
-| **Anthropic API** | Key in `.env` → `ANTHROPIC_API_KEY`; default model: Claude Haiku |
+| **Anthropic API** | Key in `.env` → `ANTHROPIC_API_KEY`; Haiku (mentoring), Sonnet (JSON structuring), Opus (analysis) |
 | **Supabase project** | ID: `ivifpljgzsmstirlrjar`, region: eu-central-1 |
 | **Supabase URL** | In `.env` → `SUPABASE_URL` |
 | **Supabase key** | In `.env` → `SUPABASE_ANON_KEY` |
