@@ -40,3 +40,7 @@ data/
 *.pem
 deploy/jarvis_vps*
 deploy/jarvis_github*
+
+# Key sync scripts (contain credentials — never commit)
+sync-keys.py
+sync-keys.sh
