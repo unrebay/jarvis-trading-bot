@@ -275,15 +275,15 @@ class TelegramHandler:
         topic = " ".join(args).strip()
 
         if not topic:
+            # Auto-pick topic based on user level
+            memory     = self.user_memory.load(user_id)
+            user_level = memory.get("learning", {}).get("level", "Intermediate")
+            topic = self.lesson_manager.get_next_topic(user_level, memory)
             await update.message.reply_text(
-                "🧠 Использование: /quiz ТЕМА\n\n"
-                "Примеры:\n"
-                "  /quiz FVG\n"
-                "  /quiz Order Block\n"
-                "  /quiz Market Structure\n\n"
-                "Список тем: /lesson"
+                f"🎲 Тема не указана — выбираю по твоему уровню: *{topic}*\n\n"
+                f"_(Можно указать свою: /quiz FVG, /quiz Order Block и т.д.)_",
+                parse_mode="Markdown"
             )
-            return
 
         if not cost_manager.can_use_api():
             await update.message.reply_text("⚠️ Дневной лимит API исчерпан.")
