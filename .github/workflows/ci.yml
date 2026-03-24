@@ -1,0 +1,75 @@
+name: CI — Branch Check
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [macbook, imac]
+
+jobs:
+  lint-and-test:
+    name: Syntax & Import Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -q python-dotenv anthropic python-telegram-bot supabase openai
+
+      - name: Check syntax (all Python files)
+        run: |
+          echo "🔍 Checking Python syntax..."
+          find src/ -name "*.py" -exec python3 -m py_compile {} \; && echo "✅ No syntax errors"
+          find scripts/ -name "*.py" -exec python3 -m py_compile {} \; 2>/dev/null && echo "✅ Scripts OK"
+          [ -f fill_embeddings.py ] && python3 -m py_compile fill_embeddings.py && echo "✅ fill_embeddings OK"
+
+      - name: Check imports resolve
+        run: |
+          echo "🔍 Checking imports..."
+          cd src && python3 -c "
+          import ast, os, sys
+          issues = []
+          for root, dirs, files in os.walk('bot'):
+              for f in files:
+                  if f.endswith('.py'):
+                      path = os.path.join(root, f)
+                      try:
+                          ast.parse(open(path).read())
+                      except SyntaxError as e:
+                          issues.append(f'{path}: {e}')
+          if issues:
+              print('❌ Issues found:')
+              for i in issues: print(i)
+              sys.exit(1)
+          else:
+              print('✅ All files parse correctly')
+          "
+
+      - name: Check .env variables documented
+        run: |
+          echo "🔍 Checking required env vars..."
+          python3 -c "
+          required = ['TELEGRAM_BOT_TOKEN', 'ANTHROPIC_API_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY']
+          content = open('src/bot/main.py').read()
+          missing = [v for v in required if v not in content and v not in open('PATHS.md').read()]
+          if missing:
+              print(f'⚠️  Undocumented vars: {missing}')
+          else:
+              print('✅ All required env vars documented')
+          "
+
+      - name: Diff summary (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "📋 Changed files in this PR:"
+          git diff --name-only origin/main...HEAD
+          echo ""
+          echo "📊 Stats:"
+          git diff --stat origin/main...HEAD

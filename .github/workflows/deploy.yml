@@ -1,15 +1,18 @@
-name: Deploy to VPS
+name: Deploy → VPS
 
 on:
   push:
-    branches: [production]
+    branches: [main]
 
 jobs:
   deploy:
-    name: Deploy Jarvis Bot
+    name: Deploy to VPS
     runs-on: ubuntu-latest
+    needs: []   # ci.yml runs separately on PR; deploy only after merge to main
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -18,22 +21,14 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "🚀 Deploy: $(date '+%Y-%m-%d %H:%M:%S')"
             cd /opt/jarvis
-
-            echo "── Pulling latest code..."
-            git pull origin production
-
-            echo "── Installing dependencies..."
-            # httpx pinned to 0.27.2 — required for gotrue 2.9.1 compatibility
-            # --no-deps bypasses python-telegram-bot==20.7 conflict check (works at runtime)
-            venv/bin/pip install -r requirements.txt -q --no-deps
-            venv/bin/pip install httpx==0.27.2 --force-reinstall --no-deps -q
-
-            echo "── Restarting bot..."
+            git fetch origin main && git reset --hard origin/main
+            echo "✅ Code updated"
+            /opt/jarvis/venv/bin/pip install -q -r requirements.txt
+            echo "✅ Deps updated"
             systemctl restart jarvis-bot
             sleep 3
-
-            echo "── Status:"
-            systemctl status jarvis-bot --no-pager -l | head -8
-
-            echo "✅ Deploy complete!"
+            systemctl is-active jarvis-bot && echo "✅ Bot running" || (journalctl -u jarvis-bot -n 20 && exit 1)
+            echo "✅ Deploy complete"
