@@ -124,14 +124,15 @@ MODEL_PATH="$WHISPER_DIR/models/$MODEL_FILE"
 if [ -f "$MODEL_PATH" ]; then
     echo "  ✅ Model already downloaded: $MODEL_PATH"
 else
-    echo "  Downloading $MODEL_FILE (~$(case $MODEL in
-        large-v3)        echo "3.1 GB" ;;
-        large-v3-turbo)  echo "1.6 GB" ;;
-        medium)          echo "1.5 GB" ;;
-        small)           echo "466 MB" ;;
-        base)            echo "142 MB" ;;
-        *)               echo "?" ;;
-    esac))..."
+    case $MODEL in
+        large-v3)        MODEL_SIZE="3.1 GB" ;;
+        large-v3-turbo)  MODEL_SIZE="1.6 GB" ;;
+        medium)          MODEL_SIZE="1.5 GB" ;;
+        small)           MODEL_SIZE="466 MB" ;;
+        base)            MODEL_SIZE="142 MB" ;;
+        *)               MODEL_SIZE="?" ;;
+    esac
+    echo "  Downloading $MODEL_FILE (~$MODEL_SIZE)..."
 
     # Use the built-in download script if available
     if [ -f "models/download-ggml-model.sh" ]; then
