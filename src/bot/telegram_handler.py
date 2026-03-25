@@ -95,12 +95,14 @@ class TelegramHandler:
             "/help — эта справка\n"
             "/status — бюджет и режим бота\n\n"
             "🎓 *Обучение*\n"
-            "/lesson — список всех тем (51 тема)\n"
+            "/lesson — следующая тема по программе\n"
             "/lesson FVG — урок по конкретной теме\n"
+            "/lesson list — полный список тем (51)\n"
             "/quiz FVG — тест с проверкой ответа\n"
             "/progress — прогресс по программе\n"
+            "/progress reset — сбросить прогресс\n"
             "/profile — что JARVIS помнит о тебе\n"
-            "/profile reset — сбросить память\n\n"
+            "/profile reset — сбросить профиль\n\n"
             "📈 *Графики*\n"
             "/chart BTCUSDT 4h — чарт + ICT/SMC анализ\n"
             "/chart EURUSD 1d — любой инструмент\n"
@@ -249,7 +251,36 @@ class TelegramHandler:
         args  = context.args or []
         topic = " ".join(args).strip()
 
+        memory     = self.user_memory.load(user_id)
+        user_level = memory.get("learning", {}).get("level", "Intermediate")
+        known      = memory.get("learning", {}).get("topics_known", [])
+
+        # /lesson без аргументов → показываем следующий рекомендуемый урок
         if not topic:
+            next_topic = self.lesson_manager.get_next_topic(user_level, known)
+            curriculum = self.lesson_manager.CURRICULUM.get(user_level, [])
+            done = sum(
+                1 for t in curriculum
+                if any(t.lower() in k.lower() or k.lower() in t.lower() for k in known)
+            )
+            total = len(curriculum)
+            if next_topic:
+                await update.message.reply_text(
+                    f"📚 Программа {user_level}: {done}/{total} тем пройдено\n\n"
+                    f"Следующая тема: *{next_topic}*\n\n"
+                    f"→ /lesson {next_topic} — начать урок\n"
+                    f"→ /lesson list — весь список тем",
+                    parse_mode="Markdown"
+                )
+            else:
+                await update.message.reply_text(
+                    f"🎉 Уровень {user_level} завершён! Все {total} тем пройдены.\n\n"
+                    f"→ /progress — посмотреть прогресс"
+                )
+            return
+
+        # /lesson list — полный список тем
+        if topic.lower() == "list":
             await update.message.reply_text(self.lesson_manager.get_topics_list())
             return
 
@@ -260,11 +291,19 @@ class TelegramHandler:
         await update.message.chat.send_action("typing")
         await update.message.reply_text(f"📖 Готовлю урок: {topic}...")
 
-        memory     = self.user_memory.load(user_id)
-        user_level = memory.get("learning", {}).get("level", "Intermediate")
-
         lesson_text = self.lesson_manager.get_lesson(topic, user_level)
         await update.message.reply_text(lesson_text)
+
+        # Предлагаем следующий урок
+        updated_known = known + [topic]
+        next_up = self.lesson_manager.get_next_topic(user_level, updated_known)
+        if next_up and next_up.lower() != topic.lower():
+            await update.message.reply_text(
+                f"✅ Тема изучена!\n\n"
+                f"Следующая по программе: *{next_up}*\n"
+                f"→ /lesson {next_up}",
+                parse_mode="Markdown"
+            )
 
         # Update memory: add topic to current_focus + trigger portrait update if needed
         memory["learning"]["current_focus"] = topic
@@ -351,9 +390,26 @@ class TelegramHandler:
     # ── /progress ──────────────────────────────────────────────────────────────
 
     async def handle_progress(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        """Handle /progress — show learning progress from user memory."""
+        """Handle /progress [reset] — show or reset learning progress."""
         user_id = update.effective_user.id
         self._ensure_user_exists(user_id, update.effective_user.username or "Anonymous")
+
+        args = context.args or []
+        if args and args[0].lower() == "reset":
+            memory = self.user_memory.load(user_id)
+            memory["learning"]["topics_known"]       = []
+            memory["learning"]["topics_struggling"]  = []
+            memory["learning"]["current_focus"]      = None
+            memory["learning"]["questions_asked"]    = 0
+            self.user_memory.save(user_id, memory)
+            await update.message.reply_text(
+                "🔄 Прогресс обучения сброшен.\n\n"
+                "Изученные темы, фокус и история вопросов очищены.\n"
+                "Уровень и профиль сохранены.\n\n"
+                "→ /lesson — начать с первой темы программы"
+            )
+            return
+
         memory = self.user_memory.load(user_id)
         progress_text = self.lesson_manager.format_progress(memory)
         await update.message.reply_text(progress_text)
