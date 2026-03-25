@@ -106,21 +106,90 @@ class RAGSearch:
 
         return self.keyword_search(query, top_k, level)
 
+    @staticmethod
+    def _extract_search_term(query: str) -> str:
+        """
+        Extract the most searchable term from a natural-language query.
+
+        Strategy (in priority order):
+        1. ALL-CAPS acronyms with optional CamelCase suffix: BOS, FVG, CHoCH, AMD
+        2. English Title Case multi-word phrases: "Order Block", "Silver Bullet"
+        3. Single English Title Case words > 3 chars
+        4. Quoted strings
+        5. Longest non-stopword Russian word
+        6. First 40 chars as last resort
+        """
+        import re
+
+        # 2. English Title Case phrase (2 words): "Order Block", "Silver Bullet", "Kill Zone"
+        en_phrases = re.findall(
+            r'\b([A-Z][a-z]{2,}\s[A-Z][a-z]{2,})\b', query
+        )
+        en_phrases = [p for p in en_phrases if all(ord(c) < 128 for c in p)]
+
+        # 1. ALL-CAPS / CamelCase acronyms (BOS, FVG, CHoCH, IPDA, etc.)
+        acronyms = re.findall(r'\b[A-Z]{2,}(?:[a-z]+[A-Z]*)?\b', query)
+        if acronyms:
+            long_acronyms = [a for a in acronyms if len(a) > 3]
+            if long_acronyms:
+                return long_acronyms[-1]
+            # Short acronym (2-3 chars): prefer it if it's the subject of the query
+            # (appears as "ACRONYM (" or "( ACRONYM )") — i.e. parenthetical notation
+            for acr in acronyms:
+                if re.search(rf'\b{re.escape(acr)}\s*[\(\—]', query) or \
+                   re.search(rf'[\(,]\s*{re.escape(acr)}\s*[\),]', query):
+                    return acr
+            # Otherwise only use short acronym if no Title Case phrase found
+            if not en_phrases:
+                return acronyms[-1]
+
+        if en_phrases:
+            return en_phrases[0]
+
+        # 3. Single English Title Case word > 3 chars (Premium, Discount, Fibonacci…)
+        en_words = re.findall(r'\b([A-Z][a-z]{3,})\b', query)
+        en_words = [w for w in en_words if all(ord(c) < 128 for c in w)]
+        if en_words:
+            return en_words[0]
+
+        # 4. Quoted strings
+        quoted = re.findall(r'["\u00ab\u00bb](.*?)["\u00ab\u00bb]', query)
+        if quoted:
+            return quoted[0]
+
+        # 5. Longest meaningful Russian word (skip stopwords)
+        RU_STOPWORDS = {
+            'что', 'такое', 'как', 'это', 'для', 'при', 'между', 'чём',
+            'чем', 'разница', 'отличие', 'опиши', 'объясни', 'является',
+            'нужно', 'можно', 'нельзя', 'какой', 'какие', 'почему',
+            'торговать', 'определить', 'определяется', 'используется',
+            'работать', 'считать', 'рисковать',
+        }
+        words = [w for w in re.split(r'\W+', query.lower())
+                 if len(w) > 4 and w not in RU_STOPWORDS]
+        if words:
+            return max(words, key=len)
+
+        return query[:40]
+
     def keyword_search(
         self, query: str, top_k: int = 4, level: str = "Intermediate"
     ) -> List[dict]:
         """
         Full-text ilike search filtered by user level.
 
-        Uses difficulty_level IN (allowed levels) so beginners don't get
-        professional content they can't use yet.
+        Extracts the most specific term from the query (ICT acronyms, key words)
+        rather than searching for the entire question string.
         """
+        search_term = self._extract_search_term(query)
         allowed_levels = _levels_up_to(level)
+
         try:
+            # Pass 1: level-filtered search for the key term
             response = (
                 self.supabase.table("knowledge_documents")
                 .select("id, title, content, section, topic, difficulty_level, metadata")
-                .ilike("content", f"%{query}%")
+                .ilike("content", f"%{search_term}%")
                 .in_("difficulty_level", allowed_levels)
                 .limit(top_k)
                 .execute()
@@ -129,11 +198,24 @@ class RAGSearch:
             if results:
                 return results
 
-            # If no level-filtered results, try without level filter as fallback
+            # Pass 2: also search topic field
+            response_topic = (
+                self.supabase.table("knowledge_documents")
+                .select("id, title, content, section, topic, difficulty_level, metadata")
+                .ilike("topic", f"%{search_term}%")
+                .in_("difficulty_level", allowed_levels)
+                .limit(top_k)
+                .execute()
+            )
+            results = response_topic.data or []
+            if results:
+                return results
+
+            # Pass 3: no level filter — cast wider net
             response2 = (
                 self.supabase.table("knowledge_documents")
                 .select("id, title, content, section, topic, difficulty_level, metadata")
-                .ilike("content", f"%{query}%")
+                .ilike("content", f"%{search_term}%")
                 .limit(top_k)
                 .execute()
             )
