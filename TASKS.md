@@ -2,19 +2,12 @@
 
 ## Active
 
-- [ ] **Multi-asset бэктест** — запустить на VPS/локально, вставить результаты в docs/
-  ```bash
-  python3 scripts/backtest_patterns.py --multi 2>&1 | tee docs/multi_backtest_$(date +%F).txt
-  ```
-  - BTC-USD, Gold (GC=F), EURUSD=X, NQ=F, ES=F — все 1d 365d
-  - Сводная таблица паттерн × актив выводится автоматически
-  - Обновить `docs/backtest-results.md` с результатами
-
 - [ ] **Freqtrade стратегия** - `freqtrade_strategy/JarvisICT.py`
-  - Использовать детекторы из `src/patterns/` как условия входа
-  - Только паттерны с win rate > 50% из бэктеста
+  - **bos_bear** (80% WR, +1.40 avg RR) → главный сигнал для short/sell
+  - **fvg_bull + ob_bull** → только для Gold в аптренде
+  - **sweep_bear** → NQ/BTC когда рынок в даунтренде
+  - Добавить HTF trend filter (SMA200 или BOS on weekly)
   - Backtesting через freqtrade backtesting
-  - Документация по установке freqtrade и запуску
 
 - [ ] **Расширить базу знаний до 500+ документов**
   - Добавить структурированные примеры сетапов (вход, стоп, цель, скриншот)
