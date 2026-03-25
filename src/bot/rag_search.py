@@ -16,16 +16,20 @@ import os
 from typing import List, Optional
 from supabase import Client
 
-# Иерархия уровней — индекс = «вес»
-LEVEL_ORDER = ["Beginner", "Elementary", "Intermediate", "Advanced", "Professional"]
+# Иерархия уровней — индекс = «вес» (lowercase, matches DB constraint)
+LEVEL_ORDER = ["beginner", "elementary", "intermediate", "advanced", "professional"]
 
 
 def _levels_up_to(level: str) -> List[str]:
-    """Return all levels from Beginner up to (and including) the given level."""
+    """Return all levels from beginner up to (and including) the given level.
+
+    Accepts both Title Case ("Intermediate") and lowercase ("intermediate") input.
+    Returns lowercase values matching DB difficulty_level constraint.
+    """
     try:
-        idx = LEVEL_ORDER.index(level)
+        idx = LEVEL_ORDER.index(level.lower())
     except ValueError:
-        idx = 2  # Default: Intermediate
+        idx = 2  # Default: intermediate
     return LEVEL_ORDER[: idx + 1]
 
 
