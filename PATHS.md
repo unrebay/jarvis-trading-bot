@@ -1,6 +1,10 @@
 # JARVIS Bot — Architecture & Paths Reference
 > Единый источник правды. Обновляй при любых изменениях структуры.
+<<<<<<< HEAD
 > Last updated: 2026-03-25 (v3.1)
+=======
+> Last updated: 2026-03-25 (v3.2)
+>>>>>>> imac
 
 ---
 
@@ -37,21 +41,26 @@ Workflow:
 ## 📁 Структура проекта
 
 src/bot/
-  main.py              - Точка входа, регистрация хэндлеров
-  telegram_handler.py  - Все команды (/lesson, /quiz, /levelup, ...)
+  main.py              - Точка входа, регистрация хэндлеров, JobQueue
+  telegram_handler.py  - Все команды (/lesson, /quiz, /levelup, /stats, ...)
   claude_client.py     - Запросы к Claude API (ментор + vision)
   rag_search.py        - Семантический поиск по KB (pgvector + keyword)
-  lesson_manager.py    - Учебная программа, XP, уровни, бейджи
+  lesson_manager.py    - Учебная программа, XP, уровни, бейджи, get_lesson_image
   user_memory.py       - Портрет ученика (JSONB в Supabase)
   cost_manager.py      - Лимиты API, дневной бюджет
   chart_generator.py   - Генерация свечных графиков (yfinance)
   chart_annotator.py   - Аннотация графиков (Pillow)
   image_handler.py     - Обработка входящих картинок
+  reminders.py         - Ежедневные напоминания об обучении (v3.2, JobQueue 09:00 UTC)
 
 src/ingestion/
   add_structured_content.py  - Добавление доков в KB (индикаторы/модели/системы)
   re_embed_missing.py        - Генерация эмбеддингов для docs без векторов
+<<<<<<< HEAD
   generate_lesson_images.py  - Генерация 8 ICT/SMC диаграмм → Supabase Storage
+=======
+  generate_lesson_images.py  - Генерация 21 ICT/SMC диаграммы и загрузка в Supabase Storage
+>>>>>>> imac
 
 system/prompts/mentor.md   - Системный промпт JARVIS-ментора
 tests/unit/                - Юнит-тесты
@@ -128,6 +137,7 @@ XP: /lesson +50 | /quiz +100 | /levelup +500
 
 ## 📝 Ingestion (запускать на iMac)
 
+<<<<<<< HEAD
   python -m src.ingestion.add_structured_content    # добавить контент в KB
   python -m src.ingestion.re_embed_missing           # сгенерировать эмбеддинги
   python -m src.ingestion.generate_lesson_images     # сгенерировать/загрузить диаграммы
@@ -147,3 +157,9 @@ XP: /lesson +50 | /quiz +100 | /levelup +500
 | v2.4 | 2026-03-22 | UserMemory — персистентный портрет ученика |
 | v2.3 | 2026-03-21 | ChartAnnotator + ChartDrawer (Sonnet vision) |
 | v2.2 | 2026-03-20 | Single ClaudeClient, CostManager |
+=======
+  python3 -m src.ingestion.add_structured_content    # добавить контент в KB
+  python3 -m src.ingestion.re_embed_missing           # сгенерировать эмбеддинги
+  python3 -m src.ingestion.generate_lesson_images     # загрузить 21 диаграмму в Storage
+  python3 scripts/analyze_kb.py                       # анализ KB
+>>>>>>> imac
