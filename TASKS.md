@@ -2,10 +2,13 @@
 
 ## Active
 
-- [ ] **Запустить бэктест паттернов на реальных данных** - `python3 scripts/backtest_patterns.py`
-  - BTC-USD 4h 180d (основной тест)
-  - Проверить win rate каждого паттерна, отсечь неэффективные
-  - Результаты → задокументировать в docs/
+- [ ] **Multi-asset бэктест** — запустить на VPS/локально, вставить результаты в docs/
+  ```bash
+  python3 scripts/backtest_patterns.py --multi 2>&1 | tee docs/multi_backtest_$(date +%F).txt
+  ```
+  - BTC-USD, Gold (GC=F), EURUSD=X, NQ=F, ES=F — все 1d 365d
+  - Сводная таблица паттерн × актив выводится автоматически
+  - Обновить `docs/backtest-results.md` с результатами
 
 - [ ] **Freqtrade стратегия** - `freqtrade_strategy/JarvisICT.py`
   - Использовать детекторы из `src/patterns/` как условия входа
@@ -35,6 +38,10 @@
 
 - [x] ~~Детекторы паттернов src/patterns/ (FVG, OB, BOS, CHoCH, LiqSweep)~~ (2026-03-25)
 - [x] ~~Бэктест скрипт scripts/backtest_patterns.py~~ (2026-03-25)
+- [x] ~~Бэктест BTC-USD 4h: bos_bear 57%, sweep_bear 50% → кандидаты для freqtrade~~ (2026-03-25)
+- [x] ~~Fix yfinance TypeError (multi_level_index=False + robust column flatten)~~ (2026-03-25)
+- [x] ~~Добавить --multi флаг: batch по BTC/Gold/EURUSD/NQ/ES + сводная таблица~~ (2026-03-25)
+- [x] ~~docs/backtest-results.md с первыми результатами и рекомендациями~~ (2026-03-25)
 - [x] ~~Починить pgvector semantic search (параметры + регистр уровней)~~ (2026-03-25)
 - [x] ~~CI smoke test из requirements.txt~~ (2026-03-25)
 - [x] ~~Safe JobQueue init (try/except, non-fatal)~~ (2026-03-25)

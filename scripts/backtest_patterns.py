@@ -190,8 +190,8 @@ def _fvg_to_trades(df: pd.DataFrame, signals: list) -> List[Trade]:
     atr = _calc_atr(df)
 
     for sig in signals:
-        if sig["filled"]:
-            continue  # уже пересечён — не торгуем
+        # NOTE: не используем sig["filled"] — он рассчитан по всему датасету
+        # (lookahead bias). Симулируем поиск ретеста честно, свеча за свечой.
 
         mid       = sig["mid"]
         zone_size = sig["high"] - sig["low"]
@@ -226,8 +226,7 @@ def _ob_to_trades(df: pd.DataFrame, signals: list) -> List[Trade]:
     atr = _calc_atr(df)
 
     for sig in signals:
-        if sig["mitigated"]:
-            continue
+        # NOTE: не используем sig["mitigated"] — lookahead bias
 
         direction = 1 if sig["type"] == "ob_bull" else -1
 
@@ -300,19 +299,67 @@ def _sweep_to_trades(df: pd.DataFrame, signals: list) -> List[Trade]:
 
 # ── Main backtest ─────────────────────────────────────────────────────────────
 
-def run_backtest(symbol: str, interval: str, period: str) -> BacktestResult:
+# ICT/SMC curriculum assets and recommended intervals
+MULTI_ASSETS = [
+    # (symbol,     interval, period,  label)
+    ("BTC-USD",   "1d",     "365d",  "Bitcoin"),
+    ("GC=F",      "1d",     "365d",  "Gold (XAU)"),
+    ("EURUSD=X",  "1d",     "365d",  "EUR/USD"),
+    ("NQ=F",      "1d",     "365d",  "Nasdaq (NQ)"),
+    ("ES=F",      "1d",     "365d",  "S&P 500 (ES)"),
+]
+
+
+def _download_df(symbol: str, interval: str, period: str) -> pd.DataFrame:
+    """
+    Robust yfinance downloader.
+    - Tries multi_level_index=False (yfinance >= 0.2.37) for flat columns.
+    - Falls back to legacy download + MultiIndex flatten.
+    - Raises ValueError if empty / None returned.
+    """
     try:
         import yfinance as yf
-        df = yf.download(symbol, period=period, interval=interval, progress=False)
-        if df.empty:
-            print(f"❌ Нет данных для {symbol}")
-            sys.exit(1)
-        df.columns = [c[0].lower() if isinstance(c, tuple) else c.lower() for c in df.columns]
     except ImportError:
         print("❌ yfinance не установлен: pip install yfinance")
         sys.exit(1)
 
-    df = df.reset_index(drop=True)
+    # Note: yfinance intraday limits — 4h/1h max 60 days, 1d up to years
+    df = None
+    try:
+        # Preferred: flat columns, no MultiIndex confusion
+        df = yf.download(
+            symbol, period=period, interval=interval,
+            progress=False, auto_adjust=True, multi_level_index=False,
+        )
+    except TypeError:
+        # Older yfinance doesn't know multi_level_index
+        df = yf.download(
+            symbol, period=period, interval=interval,
+            progress=False, auto_adjust=True,
+        )
+
+    if df is None or (hasattr(df, "empty") and df.empty):
+        raise ValueError(f"Нет данных для {symbol} ({interval} {period})")
+
+    # Flatten MultiIndex columns → plain lowercase strings
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0).str.lower()
+    else:
+        df.columns = [str(c).lower() for c in df.columns]
+
+    # Keep only OHLCV
+    df = df[["open", "high", "low", "close", "volume"]].copy()
+    df = df.dropna(subset=["open", "high", "low", "close"])
+    return df.reset_index(drop=True)
+
+
+def run_backtest(symbol: str, interval: str, period: str) -> BacktestResult:
+    try:
+        df = _download_df(symbol, interval, period)
+    except ValueError as e:
+        print(f"❌ {e}")
+        sys.exit(1)
+
     result = BacktestResult(symbol=symbol, interval=interval, period=period, total_candles=len(df))
 
     print(f"\n📊 {symbol} · {interval} · {period} → {len(df)} свечей")
@@ -407,12 +454,112 @@ def print_report(result: BacktestResult) -> None:
 def main():
     parser = argparse.ArgumentParser(description="Бэктест ICT/SMC паттернов")
     parser.add_argument("--symbol",   default="BTC-USD",  help="Тикер (yfinance)")
-    parser.add_argument("--interval", default="4h",       help="Таймфрейм: 1h 4h 1d")
-    parser.add_argument("--period",   default="180d",     help="Период: 30d 90d 180d 1y")
+    parser.add_argument("--interval", default="1d",       help="Таймфрейм: 1h 4h 1d")
+    parser.add_argument("--period",   default="365d",     help="Период: 30d 90d 180d 1y 2y")
+    parser.add_argument("--multi",    action="store_true",
+                        help="Запустить бэктест по всем ICT/SMC активам (BTC, Gold, EURUSD, NQ, ES)")
     args = parser.parse_args()
 
-    result = run_backtest(args.symbol, args.interval, args.period)
-    print_report(result)
+    if args.multi:
+        _run_multi()
+    else:
+        result = run_backtest(args.symbol, args.interval, args.period)
+        print_report(result)
+
+
+def _run_multi():
+    """Batch backtest across all key ICT/SMC curriculum assets."""
+    summary_rows = []
+
+    for symbol, interval, period, label in MULTI_ASSETS:
+        print(f"\n{'━'*60}")
+        print(f"  {label} ({symbol})")
+        print(f"{'━'*60}")
+        try:
+            df = _download_df(symbol, interval, period)
+        except ValueError as e:
+            print(f"  ❌ {e} — пропускаем")
+            continue
+
+        result = BacktestResult(symbol=symbol, interval=interval,
+                                period=period, total_candles=len(df))
+
+        print(f"  {len(df)} свечей  {interval} {period}")
+
+        fvg_sigs   = detect_fvg(df)
+        ob_sigs    = detect_order_block(df)
+        bos_sigs   = detect_bos(df)
+        choch_sigs = detect_choch(df)
+        sweep_sigs = detect_liquidity_sweep(df)
+
+        print(f"  Паттернов: FVG={len(fvg_sigs)} OB={len(ob_sigs)} "
+              f"BOS={len(bos_sigs)} CHoCH={len(choch_sigs)} Sweep={len(sweep_sigs)}")
+
+        result.trades += _fvg_to_trades(df, fvg_sigs)
+        result.trades += _ob_to_trades(df, ob_sigs)
+        result.trades += _structure_to_trades(df, bos_sigs)
+        result.trades += _structure_to_trades(df, choch_sigs)
+        result.trades += _sweep_to_trades(df, sweep_sigs)
+
+        print_report(result)
+
+        # Collect per-pattern summary for cross-asset table
+        all_types = sorted(set(t.pattern_type for t in result.trades))
+        for ptype in all_types:
+            group  = [t for t in result.trades if t.pattern_type == ptype]
+            closed = [t for t in group if t.result != "open"]
+            if not closed:
+                continue
+            wins = [t for t in closed if t.result == "win"]
+            wr   = len(wins) / len(closed) * 100
+            avg_rr = np.mean([t.realized_rr for t in closed])
+            summary_rows.append({
+                "asset":   label,
+                "pattern": ptype,
+                "trades":  len(closed),
+                "win_rate": round(wr, 1),
+                "avg_rr":  round(avg_rr, 3),
+            })
+
+    # ── Cross-asset summary table ────────────────────────────────────────────
+    if not summary_rows:
+        print("\nНет данных для сводной таблицы.")
+        return
+
+    print(f"\n\n{'═'*72}")
+    print("  СВОДНАЯ ТАБЛИЦА — ICT/SMC ПАТТЕРНЫ × АКТИВЫ")
+    print(f"{'═'*72}")
+    print(f"  {'Актив':<15} {'Паттерн':<22} {'Сделок':>7} {'Win%':>7} {'avg RR':>8}  {'✓/✗'}")
+    print(f"  {'─'*15} {'─'*22} {'─'*7} {'─'*7} {'─'*8}  {'─'*5}")
+
+    for row in summary_rows:
+        ok = "✅" if row["win_rate"] >= 50 else ("⚠️ " if row["win_rate"] >= 40 else "❌")
+        print(f"  {row['asset']:<15} {row['pattern']:<22} {row['trades']:>7} "
+              f"{row['win_rate']:>6.1f}% {row['avg_rr']:>+8.3f}  {ok}")
+
+    # Best patterns overall
+    from collections import defaultdict
+    pattern_agg: dict = defaultdict(lambda: {"wins": 0, "total": 0, "rr_sum": 0.0})
+    for row in summary_rows:
+        p = pattern_agg[row["pattern"]]
+        wins = round(row["trades"] * row["win_rate"] / 100)
+        p["wins"]   += wins
+        p["total"]  += row["trades"]
+        p["rr_sum"] += row["avg_rr"] * row["trades"]
+
+    print(f"\n  {'─'*72}")
+    print("  АГРЕГАТ (все активы):")
+    for pname, p in sorted(pattern_agg.items(),
+                           key=lambda x: x[1]["wins"] / max(x[1]["total"], 1),
+                           reverse=True):
+        if p["total"] == 0:
+            continue
+        wr    = p["wins"] / p["total"] * 100
+        avg_rr = p["rr_sum"] / p["total"]
+        rec   = "→ использовать" if wr >= 50 else ("→ осторожно" if wr >= 40 else "→ пропустить")
+        print(f"  {pname:<22} WR={wr:5.1f}%  avg RR={avg_rr:+.3f}  {rec}")
+
+    print(f"{'═'*72}\n")
 
 
 if __name__ == "__main__":
