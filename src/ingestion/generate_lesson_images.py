@@ -373,18 +373,26 @@ CONCEPTS = [
 
 
 def upload_to_supabase(image_bytes: bytes, filename: str) -> str | None:
-    """Upload image to Supabase Storage, return public URL."""
+    """
+    Upload image to Supabase Storage via direct REST API.
+    Uses requests instead of supabase-py client to avoid client-level auth issues.
+    Returns public URL on success, None on failure.
+    """
+    import requests
+    path = f"concepts/{filename}"
+    url  = f"{SUPABASE_URL}/storage/v1/object/{BUCKET}/{path}"
+
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type":  "image/png",
+        "x-upsert":      "true",
+    }
     try:
-        from supabase import create_client
-        client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        path = f"concepts/{filename}"
-        client.storage.from_(BUCKET).upload(
-            path=path,
-            file=image_bytes,
-            file_options={"content-type": "image/png", "upsert": "true"}
-        )
-        url = f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{path}"
-        return url
+        resp = requests.post(url, data=image_bytes, headers=headers, timeout=30)
+        if resp.status_code in (200, 201):
+            return f"{SUPABASE_URL}/storage/v1/object/public/{BUCKET}/{path}"
+        print(f"  ⚠️  Upload error: {resp.status_code} {resp.text}")
+        return None
     except Exception as e:
         print(f"  ⚠️  Upload error: {e}")
         return None
