@@ -184,7 +184,7 @@ class ClaudeClient:
         self,
         user_message: str,
         history: Optional[list] = None,
-        level: str = "Intermediate",
+        level: str = "Beginner",
         knowledge_context: Optional[str] = None,
     ) -> str:
         """
@@ -583,7 +583,7 @@ if __name__ == "__main__":
     # Пример: запрос к ментору
     response = client.ask_mentor(
         user_message="Что такое FVG и как его торговать?",
-        level="Intermediate",
+        level="Beginner",
         knowledge_context="Ищу понимание принципов Fair Value Gap на EUR/USD",
     )
     print("Ответ ментора:")

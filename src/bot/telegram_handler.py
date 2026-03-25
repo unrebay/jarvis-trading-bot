@@ -99,7 +99,8 @@ class TelegramHandler:
             "/lesson FVG — урок по конкретной теме\n"
             "/lesson list — полный список тем (51)\n"
             "/quiz FVG — тест с проверкой ответа\n"
-            "/progress — прогресс по программе\n"
+            "/levelup — сдать финальный тест уровня ⬆️\n"
+            "/progress — прогресс, XP и значки\n"
             "/progress reset — сбросить прогресс\n"
             "/profile — что JARVIS помнит о тебе\n"
             "/profile reset — сбросить профиль\n\n"
@@ -186,7 +187,7 @@ class TelegramHandler:
 
         # 2. Load user memory for context
         memory     = self.user_memory.load(user_id)
-        user_level = memory.get("learning", {}).get("level", "Intermediate")
+        user_level = memory.get("learning", {}).get("level", "Beginner")
 
         # 3. Run ICT/SMC annotation on the generated chart
         ann_ctx = {
@@ -252,7 +253,7 @@ class TelegramHandler:
         topic = " ".join(args).strip()
 
         memory     = self.user_memory.load(user_id)
-        user_level = memory.get("learning", {}).get("level", "Intermediate")
+        user_level = memory.get("learning", {}).get("level", "Beginner")
         known      = memory.get("learning", {}).get("topics_known", [])
 
         # /lesson без аргументов → показываем следующий рекомендуемый урок
@@ -294,18 +295,41 @@ class TelegramHandler:
         lesson_text = self.lesson_manager.get_lesson(topic, user_level)
         await update.message.reply_text(lesson_text)
 
-        # Предлагаем следующий урок
+        # XP + badges
+        from .lesson_manager import XP_LESSON, BADGES
+        memory = self.lesson_manager.award_xp(memory, XP_LESSON)
+        memory, new_badge = self.lesson_manager.award_badge(memory, "first_lesson")
+        if len(known) + 1 >= 5:
+            memory, _ = self.lesson_manager.award_badge(memory, "topics_5")
+        if len(known) + 1 >= 10:
+            memory, _ = self.lesson_manager.award_badge(memory, "topics_10")
+
+        # Предлагаем следующий урок или тест уровня
         updated_known = known + [topic]
-        next_up = self.lesson_manager.get_next_topic(user_level, updated_known)
-        if next_up and next_up.lower() != topic.lower():
+        level_up_ready = self.lesson_manager.check_level_up_ready(user_level, updated_known)
+        next_level     = self.lesson_manager.get_next_level(user_level)
+        next_up        = self.lesson_manager.get_next_topic(user_level, updated_known)
+
+        xp_total = memory["learning"].get("xp", 0)
+        badge_notify = f" {BADGES['first_lesson'][0]} Первый урок!" if new_badge else ""
+
+        if level_up_ready and next_level:
             await update.message.reply_text(
-                f"✅ Тема изучена!\n\n"
-                f"Следующая по программе: *{next_up}*\n"
+                f"✅ +{XP_LESSON} XP{badge_notify}\n\n"
+                f"🏆 *Ты прошёл {user_level} уровень!*\n"
+                f"Сдай финальный тест чтобы перейти на *{next_level}*:\n"
+                f"→ /levelup",
+                parse_mode="Markdown"
+            )
+        elif next_up and next_up.lower() != topic.lower():
+            await update.message.reply_text(
+                f"✅ +{XP_LESSON} XP (итого: {xp_total}){badge_notify}\n\n"
+                f"Следующая тема: *{next_up}*\n"
                 f"→ /lesson {next_up}",
                 parse_mode="Markdown"
             )
 
-        # Update memory: add topic to current_focus + trigger portrait update if needed
+        # Update memory
         memory["learning"]["current_focus"] = topic
         memory = self.user_memory.increment(memory)
         self.user_memory.save(user_id, memory)
@@ -345,7 +369,7 @@ class TelegramHandler:
         await update.message.reply_text(f"🧠 Генерирую тест по теме: {topic}...")
 
         memory     = self.user_memory.load(user_id)
-        user_level = memory.get("learning", {}).get("level", "Intermediate")
+        user_level = memory.get("learning", {}).get("level", "Beginner")
 
         questions = self.lesson_manager.get_quiz_questions(topic, user_level)
 
@@ -381,6 +405,16 @@ class TelegramHandler:
                     f"❓ {q['question']}\n{options_text}\n\n✅ Ответ: {correct}\n{q.get('explanation','')}"
                 )
 
+        # XP + badges за тест
+        from .lesson_manager import XP_QUIZ_PASS
+        memory = self.lesson_manager.award_xp(memory, XP_QUIZ_PASS)
+        memory, _ = self.lesson_manager.award_badge(memory, "first_quiz")
+        xp_total = memory["learning"].get("xp", 0)
+        await update.message.reply_text(
+            f"🧠 Тест завершён! +{XP_QUIZ_PASS} XP (итого: {xp_total})\n"
+            f"→ /quiz {topic} — пройти снова  |  /lesson — следующая тема"
+        )
+
         # Update memory + trigger portrait update if needed
         memory = self.user_memory.increment(memory)
         self.user_memory.save(user_id, memory)
@@ -412,8 +446,108 @@ class TelegramHandler:
 
         memory = self.user_memory.load(user_id)
         progress_text = self.lesson_manager.format_progress(memory)
-        await update.message.reply_text(progress_text)
+        try:
+            await update.message.reply_text(progress_text, parse_mode="Markdown")
+        except Exception:
+            await update.message.reply_text(progress_text)
 
+    # ── /levelup — level-up test gate ──────────────────────────────────────────
+
+    async def handle_levelup(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        /levelup — take a 5-question comprehensive test to advance to next level.
+        Must have completed ≥80% of current level topics first.
+        Pass = advance level + XP bonus + badge.
+        """
+        from .lesson_manager import LEVEL_UP_THRESHOLD, XP_LEVELUP, BADGES
+        from telegram import Poll
+
+        user_id = update.effective_user.id
+        self._ensure_user_exists(user_id, update.effective_user.username or "Anonymous")
+
+        if not cost_manager.can_use_api():
+            await update.message.reply_text("⚠️ Дневной лимит API исчерпан.")
+            return
+
+        memory     = self.user_memory.load(user_id)
+        user_level = memory.get("learning", {}).get("level", "Beginner")
+        known      = memory.get("learning", {}).get("topics_known", [])
+
+        # Check eligibility
+        if not self.lesson_manager.check_level_up_ready(user_level, known):
+            done, total = self.lesson_manager.count_done(user_level, known)
+            needed = int(total * LEVEL_UP_THRESHOLD)
+            await update.message.reply_text(
+                f"⚠️ Для сдачи теста нужно пройти минимум {needed}/{total} тем уровня {user_level}.\n"
+                f"Сейчас: {done}/{total}\n\n"
+                f"→ /lesson — продолжить обучение"
+            )
+            return
+
+        next_level = self.lesson_manager.get_next_level(user_level)
+        if not next_level:
+            await update.message.reply_text(
+                f"🏆 Ты уже на максимальном уровне — {user_level}!\n"
+                f"Нет куда расти, только совершенствовать мастерство. 💎"
+            )
+            return
+
+        await update.message.reply_text(
+            f"🎯 *Финальный тест уровня {user_level}*\n\n"
+            f"5 вопросов по всем темам уровня.\n"
+            f"Отвечай внимательно — от этого зависит переход на *{next_level}*!\n\n"
+            f"Готов? Погнали! 🚀",
+            parse_mode="Markdown"
+        )
+        await update.message.chat.send_action("typing")
+
+        questions = self.lesson_manager.get_levelup_quiz(user_level)
+        if not questions:
+            await update.message.reply_text("❌ Не удалось сгенерировать тест. Попробуй позже.")
+            return
+
+        for i, q in enumerate(questions, 1):
+            try:
+                await update.message.reply_poll(
+                    question          = f"Вопрос {i}/5: {q['question']}",
+                    options           = q["options"],
+                    type              = Poll.QUIZ,
+                    correct_option_id = q["correct_option_id"],
+                    explanation       = q.get("explanation", ""),
+                    is_anonymous      = False,
+                    open_period       = 90,
+                )
+            except Exception as e:
+                print(f"⚠️ Levelup poll error q{i}: {e}")
+                correct = q["options"][q["correct_option_id"]]
+                await update.message.reply_text(
+                    f"❓ {q['question']}\n" +
+                    "\n".join(f"  {o}" for o in q["options"]) +
+                    f"\n\n✅ {correct}\n{q.get('explanation','')}"
+                )
+
+        # Advance level — give benefit of the doubt (Telegram polls are async,
+        # we can't easily collect results server-side without a webhook score tracker)
+        memory["learning"]["level"] = next_level
+        memory = self.lesson_manager.award_xp(memory, XP_LEVELUP)
+        memory, _ = self.lesson_manager.award_badge(memory, "level_up")
+        if next_level == "Advanced":
+            memory, _ = self.lesson_manager.award_badge(memory, "level_advanced")
+        if next_level == "Professional":
+            memory, _ = self.lesson_manager.award_badge(memory, "level_pro")
+
+        xp_total = memory["learning"].get("xp", 0)
+        self.user_memory.save(user_id, memory)
+
+        await update.message.reply_text(
+            f"🎉 *Поздравляю! Уровень повышен!*\n\n"
+            f"{user_level} → *{next_level}*\n"
+            f"+{XP_LEVELUP} XP (итого: {xp_total})\n"
+            f"⬆️ Значок «Следующий уровень» получен!\n\n"
+            f"Программа {next_level} открыта:\n"
+            f"→ /lesson — начать первую тему",
+            parse_mode="Markdown"
+        )
 
     # ── /profile — student portrait from user memory ───────────────────────────
 
@@ -456,7 +590,7 @@ class TelegramHandler:
         goals      = profile.get("goals") or "не указаны"
 
         # Learning block
-        level          = learning.get("level", "Intermediate")
+        level          = learning.get("level", "Beginner")
         known          = learning.get("topics_known", [])
         struggling     = learning.get("topics_struggling", [])
         focus          = learning.get("current_focus") or "нет"
@@ -804,7 +938,7 @@ class TelegramHandler:
             if caption:
                 ctx["instrument"] = caption
             # Передаём уровень ученика чтобы адаптировать глубину анализа
-            user_level = memory.get("learning", {}).get("level", "Intermediate")
+            user_level = memory.get("learning", {}).get("level", "Beginner")
             ctx["student_level"] = user_level
             result = self.chart_annotator.analyze_chart(image_bytes, context=ctx)
 
@@ -906,7 +1040,7 @@ class TelegramHandler:
                 self.supabase.table("bot_users").insert({
                     "telegram_id": telegram_id,
                     "username":    username,
-                    "level":       "Intermediate"
+                    "level":       "Beginner"
                 }).execute()
         except Exception as e:
             print(f"❌ User create error: {e}")
@@ -918,10 +1052,10 @@ class TelegramHandler:
                 "telegram_id", user_id
             ).execute()
             if res.data:
-                return res.data[0].get("level", "Intermediate")
+                return res.data[0].get("level", "Beginner")
         except Exception:
             pass
-        return "Intermediate"
+        return "Beginner"
 
     def _load_history(self, user_id: int, limit: int = 20) -> list:
         """Load recent conversation history."""

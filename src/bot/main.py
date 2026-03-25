@@ -81,6 +81,7 @@ class JarvisBot:
         self.application.add_handler(CommandHandler("lesson",   handler.handle_lesson))
         self.application.add_handler(CommandHandler("quiz",     handler.handle_quiz))
         self.application.add_handler(CommandHandler("progress", handler.handle_progress))
+        self.application.add_handler(CommandHandler("levelup",  handler.handle_levelup))
         self.application.add_handler(CommandHandler("profile",  handler.handle_profile))
 
         # ── Watchlist ──
@@ -107,13 +108,14 @@ class JarvisBot:
         commands = [
             BotCommand("start",    "👋 Начать / перезапустить бота"),
             BotCommand("help",     "📖 Список всех команд"),
-            BotCommand("status",   "💰 Бюджет и режим бота"),
-            BotCommand("chart",    "📈 Сгенерировать чарт  — /chart BTCUSDT 4h"),
-            BotCommand("lesson",   "🎓 Урок по теме  — /lesson FVG"),
-            BotCommand("quiz",     "❓ Тест по теме  — /quiz OB"),
-            BotCommand("progress", "📊 Мой прогресс обучения"),
+            BotCommand("lesson",   "🎓 Следующий урок по программе"),
+            BotCommand("quiz",     "❓ Тест по теме — /quiz FVG"),
+            BotCommand("levelup",  "⬆️ Сдать тест для перехода на след. уровень"),
+            BotCommand("progress", "📊 Мой прогресс и XP"),
             BotCommand("profile",  "👤 Мой профиль (что JARVIS помнит)"),
-            BotCommand("watch",    "👁 Watchlist  — /watch add BTCUSDT 4h"),
+            BotCommand("chart",    "📈 Чарт с анализом — /chart BTCUSDT 4h"),
+            BotCommand("watch",    "👁 Watchlist — /watch add BTCUSDT 4h"),
+            BotCommand("status",   "💰 Бюджет и режим бота"),
         ]
         await application.bot.set_my_commands(commands)
 
