@@ -23,8 +23,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY") or os.getenv("SUPABASE_KEY")
+SUPABASE_URL          = os.getenv("SUPABASE_URL")
+# Ingestion scripts need service_role key to bypass Storage RLS.
+# Anon key only has SELECT on lesson-images bucket.
+SUPABASE_SERVICE_KEY  = (
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    or os.getenv("SUPABASE_SERVICE_KEY")
+    or os.getenv("SUPABASE_ANON_KEY")   # last-resort fallback (will 403)
+)
 BUCKET = "lesson-images"
 
 # ── Dark theme ─────────────────────────────────────────────────────────────────
@@ -376,7 +382,7 @@ def upload_to_supabase(image_bytes: bytes, filename: str) -> str | None:
     """Upload image to Supabase Storage, return public URL."""
     try:
         from supabase import create_client
-        client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
         path = f"concepts/{filename}"
         client.storage.from_(BUCKET).upload(
             path=path,
@@ -393,7 +399,7 @@ def upload_to_supabase(image_bytes: bytes, filename: str) -> str | None:
 def insert_lesson_image(topic: str, image_url: str, caption: str, level: str, concept_type: str):
     try:
         from supabase import create_client
-        client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
         client.table("lesson_images").upsert({
             "topic":        topic,
             "image_url":    image_url,
@@ -407,9 +413,13 @@ def insert_lesson_image(topic: str, image_url: str, caption: str, level: str, co
 
 
 def main():
-    if not SUPABASE_URL or not SUPABASE_KEY:
-        print("❌ SUPABASE_URL / SUPABASE_ANON_KEY not set in .env")
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        print("❌ SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set in .env")
         sys.exit(1)
+    if SUPABASE_SERVICE_KEY == os.getenv("SUPABASE_ANON_KEY"):
+        print("⚠️  WARNING: Using anon key — uploads will likely 403.")
+        print("   Add SUPABASE_SERVICE_ROLE_KEY to .env (Supabase → Settings → API)")
+        print()
 
     print(f"🎨 Generating {len(CONCEPTS)} educational diagrams...\n")
 
