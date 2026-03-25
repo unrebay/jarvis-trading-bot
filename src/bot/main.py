@@ -98,11 +98,20 @@ class JarvisBot:
     def _register_handlers(self):
         """Register all command and message handlers."""
         # ── Daily reminders (v3.2) ──
-        self.application.job_queue.run_daily(
-            _daily_reminder_job,
-            time = dt_time(hour=9, minute=0, tzinfo=timezone.utc),
-            name = "daily_reminders",
-        )
+        # Wrapped in try/except: if APScheduler is missing or JobQueue is None,
+        # bot starts normally — reminders just won't fire (non-fatal degradation).
+        try:
+            if self.application.job_queue is not None:
+                self.application.job_queue.run_daily(
+                    _daily_reminder_job,
+                    time = dt_time(hour=9, minute=0, tzinfo=timezone.utc),
+                    name = "daily_reminders",
+                )
+                print("   ✅ DailyReminder registered (09:00 UTC)")
+            else:
+                print("   ⚠️  JobQueue not available — reminders disabled (install APScheduler)")
+        except Exception as e:
+            print(f"   ⚠️  DailyReminder setup failed (non-fatal): {e}")
 
         # ── Core ──
         self.application.add_handler(CommandHandler("start",    handler.handle_start))

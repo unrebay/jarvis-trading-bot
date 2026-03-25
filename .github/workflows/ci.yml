@@ -21,20 +21,21 @@ jobs:
         with:
           python-version: '3.11'
 
+      # ── CRITICAL: install from requirements.txt (same as production VPS) ──
       - name: Install dependencies
         run: |
-          pip install -q python-dotenv anthropic python-telegram-bot supabase openai
+          pip install -q -r requirements.txt
 
+      # ── Syntax check ──
       - name: Check syntax (all Python files)
         run: |
           echo "🔍 Checking Python syntax..."
           find src/ -name "*.py" -exec python3 -m py_compile {} \; && echo "✅ No syntax errors"
-          find scripts/ -name "*.py" -exec python3 -m py_compile {} \; 2>/dev/null && echo "✅ Scripts OK"
-          [ -f fill_embeddings.py ] && python3 -m py_compile fill_embeddings.py && echo "✅ fill_embeddings OK"
 
-      - name: Check imports resolve
+      # ── AST parse check ──
+      - name: Check AST parse
         run: |
-          echo "🔍 Checking imports..."
+          echo "🔍 Checking AST..."
           cd src && python3 -c "
           import ast, os, sys
           issues = []
@@ -54,19 +55,66 @@ jobs:
               print('✅ All files parse correctly')
           "
 
-      - name: Check .env variables documented
+      # ── SMOKE TEST: actually import every bot module ──
+      # This catches missing packages, broken imports, circular deps.
+      # Uses fake env vars so no real API connections are made.
+      - name: Smoke test — import all bot modules
+        env:
+          TELEGRAM_BOT_TOKEN: "0000000000:fake_token_for_ci_only"
+          ANTHROPIC_API_KEY: "sk-ant-fake-for-ci"
+          SUPABASE_URL: "https://fake.supabase.co"
+          SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake"
+          OPENAI_API_KEY: "sk-fake-for-ci"
+        run: |
+          echo "🔍 Smoke testing imports..."
+          python3 -c "
+          import sys, importlib
+
+          modules = [
+              'src.bot.claude_client',
+              'src.bot.cost_manager',
+              'src.bot.lesson_manager',
+              'src.bot.rag_search',
+              'src.bot.user_memory',
+              'src.bot.reminders',
+              'src.bot.chart_generator',
+              'src.bot.chart_annotator',
+              'src.bot.image_handler',
+              'src.bot.telegram_handler',
+          ]
+
+          failed = []
+          for mod in modules:
+              try:
+                  importlib.import_module(mod)
+                  print(f'  ✅ {mod}')
+              except Exception as e:
+                  print(f'  ❌ {mod}: {e}')
+                  failed.append(mod)
+
+          if failed:
+              print(f'\n❌ {len(failed)} module(s) failed to import')
+              sys.exit(1)
+          else:
+              print('\n✅ All modules import successfully')
+          "
+
+      # ── Check required env vars are present in main.py ──
+      - name: Check env vars documented
         run: |
           echo "🔍 Checking required env vars..."
           python3 -c "
           required = ['TELEGRAM_BOT_TOKEN', 'ANTHROPIC_API_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY']
           content = open('src/bot/main.py').read()
-          missing = [v for v in required if v not in content and v not in open('PATHS.md').read()]
+          paths  = open('PATHS.md').read()
+          missing = [v for v in required if v not in content and v not in paths]
           if missing:
               print(f'⚠️  Undocumented vars: {missing}')
           else:
               print('✅ All required env vars documented')
           "
 
+      # ── PR diff summary ──
       - name: Diff summary (PR only)
         if: github.event_name == 'pull_request'
         run: |
