@@ -92,9 +92,10 @@ class RAGSearch:
             response = self.supabase.rpc(
                 "match_knowledge_documents",
                 {
-                    "query_embedding": vector,
-                    "match_count": top_k,
-                    "filter": {"difficulty_levels": allowed_levels},
+                    "query_embedding":  vector,
+                    "match_count":      top_k,
+                    "match_threshold":  0.3,          # lowered from 0.7 — more results
+                    "filter_levels":    allowed_levels,
                 },
             ).execute()
             results = response.data or []
