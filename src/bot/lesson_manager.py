@@ -29,10 +29,12 @@ CURRICULUM: dict[str, list[str]] = {
         "Support and Resistance",
         "Candlestick Basics",
         "Trend",
-        "BOS",         # Break of Structure
-        "CHoCH",       # Change of Character
+        "BOS",             # Break of Structure
+        "CHoCH",           # Change of Character
         "Liquidity",
         "Risk Management",
+        "Терминология ICT",
+        "Торговые инструменты",
     ],
     "Intermediate": [
         "FVG",                    # Fair Value Gap
@@ -44,21 +46,42 @@ CURRICULUM: dict[str, list[str]] = {
         "Displacement",
         "MSS",                    # Market Structure Shift
         "Liquidity Sweep",
+        "Inducement",
+        "BPR",                    # Balanced Price Range
+        "Volume Imbalance",
+        "SNR",                    # Support / Resistance refined
+        "Sponsor Candle",
     ],
     "Advanced": [
         "Entry Model",
-        "AMD",                    # Accumulation Manipulation Distribution
+        "AMD",                    # Accumulation Manipulation Distribution (PO3)
         "ICT Killzones",
         "Mitigation Block",
         "Multi-Timeframe Analysis",
         "OTE",                    # Optimal Trade Entry
+        "Rejection Block",
+        "STB / BTS",             # Sell to Buy / Buy to Sell
+        "Торговые сессии",        # London, NY, Asia timings
+        "Тайминги",               # Kill zones, session timings
+        "Gold Mechanics",        # XAUUSD specifics
+        "TGIF Setup",
+        "Judas Swing",
     ],
     "Professional": [
         "IPDA",                   # Institutional Price Delivery Algorithm
         "Institutional Order Flow",
         "Smart Money Concepts",
         "Trading Psychology",
-        "Portfolio Management",
+        "Дисциплина",
+        "Торговый план",
+        "Backtest",
+        "Управление рисками",     # Risk %, RR, position sizing
+        "Wyckoff",
+        "RTGS Theory",           # Real-Time Gross Settlement
+        "Advanced Market Structure",
+        "STDV Projection",       # Standard Deviation
+        "Weekly Profiles",
+        "DWMY Opens",            # Daily/Weekly/Monthly/Yearly
     ],
 }
 

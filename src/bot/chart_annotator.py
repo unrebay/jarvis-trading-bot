@@ -64,8 +64,9 @@ class ChartAnnotator:
     (normalized 0-1 coordinates) that ChartDrawer can render.
     """
 
-    # Dev mode: Haiku to minimize costs. Switch to "claude-opus-4-6" for production accuracy.
-    VISION_MODEL = "claude-haiku-4-5-20251001"
+    # Sonnet for production: significantly better ICT/SMC pattern recognition vs Haiku.
+    # Cost delta: ~$0.02 per chart analysis — acceptable for quality.
+    VISION_MODEL = "claude-sonnet-4-6"
 
     # Image hash cache: avoids re-analyzing identical charts within a session.
     # Key: sha256 hex of image_data; Value: full analysis result dict.
@@ -163,7 +164,7 @@ class ChartAnnotator:
 
             response = self.claude.client.messages.create(
                 model=self.VISION_MODEL,
-                max_tokens=2048,  # Haiku достаточно; увеличить для Opus/Sonnet
+                max_tokens=4096,  # Sonnet: увеличен лимит для детального ICT/SMC анализа
                 messages=[
                     {
                         "role": "user",

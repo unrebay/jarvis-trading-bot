@@ -354,6 +354,100 @@ class TelegramHandler:
         progress_text = self.lesson_manager.format_progress(memory)
         await update.message.reply_text(progress_text)
 
+
+    # ── /profile — student portrait from user memory ───────────────────────────
+
+    async def handle_profile(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        /profile — show what JARVIS remembers about this student.
+        /profile reset — wipe memory and start fresh.
+        """
+        user_id  = update.effective_user.id
+        username = update.effective_user.username or "Anonymous"
+        self._ensure_user_exists(user_id, username)
+
+        args = context.args or []
+
+        # ── /profile reset ────────────────────────────────────────────────────
+        if args and args[0].lower() == "reset":
+            from .user_memory import DEFAULT_MEMORY
+            import copy
+            self.user_memory.save(user_id, copy.deepcopy(DEFAULT_MEMORY))
+            await update.message.reply_text(
+                "🗑 Память сброшена.\n\n"
+                "JARVIS начнёт знакомиться с тобой заново с следующего сообщения."
+            )
+            return
+
+        # ── Показываем портрет ────────────────────────────────────────────────
+        memory = self.user_memory.load(user_id)
+
+        profile      = memory.get("profile", {})
+        learning     = memory.get("learning", {})
+        personality  = memory.get("personality", {})
+        conversations = memory.get("conversations", {})
+
+        # Profile block
+        name       = profile.get("name") or username
+        experience = profile.get("experience") or "не указан"
+        style      = profile.get("style") or "не определён"
+        pairs      = ", ".join(profile.get("pairs", [])) or "не указаны"
+        timeframes = ", ".join(profile.get("timeframes", [])) or "не указаны"
+        goals      = profile.get("goals") or "не указаны"
+
+        # Learning block
+        level          = learning.get("level", "Intermediate")
+        known          = learning.get("topics_known", [])
+        struggling     = learning.get("topics_struggling", [])
+        focus          = learning.get("current_focus") or "нет"
+        q_asked        = learning.get("questions_asked", 0)
+
+        # Conversations
+        total_msgs = conversations.get("total_messages", 0)
+        summary    = conversations.get("summary", "")
+
+        # Build level bar (5 levels)
+        level_map = {"Beginner": 1, "Elementary": 2, "Intermediate": 3, "Advanced": 4, "Professional": 5}
+        level_n   = level_map.get(level, 3)
+        level_bar = "▓" * level_n + "░" * (5 - level_n)
+
+        lines = [
+            f"👤 *Профиль ученика — {name}*",
+            "",
+            f"*Уровень:* {level} [{level_bar}]",
+            f"*Опыт торговли:* {experience}",
+            f"*Стиль:* {style}",
+            f"*Инструменты:* {pairs}",
+            f"*Таймфреймы:* {timeframes}",
+            f"*Цель:* {goals}",
+            "",
+            f"*Всего сообщений:* {total_msgs}",
+            f"*Вопросов задано:* {q_asked}",
+            f"*Текущий фокус:* {focus}",
+        ]
+
+        if known:
+            known_str = ", ".join(known[:8])
+            if len(known) > 8:
+                known_str += f" (+{len(known)-8})"
+            lines.append(f"*Знает:* {known_str}")
+
+        if struggling:
+            lines.append(f"*Сложно даётся:* {', '.join(struggling[:5])}")
+
+        if summary:
+            lines.append("")
+            lines.append(f"*Резюме:* {summary}")
+
+        lines.append("")
+        lines.append("_/profile reset — сбросить память_")
+
+        text = "\n".join(lines)
+        try:
+            await update.message.reply_text(text, parse_mode="Markdown")
+        except Exception:
+            await update.message.reply_text(text)
+
     # ── /watch — user watchlist management ─────────────────────────────────────
 
     async def handle_watch(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

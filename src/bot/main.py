@@ -80,6 +80,7 @@ class JarvisBot:
         self.application.add_handler(CommandHandler("lesson",   handler.handle_lesson))
         self.application.add_handler(CommandHandler("quiz",     handler.handle_quiz))
         self.application.add_handler(CommandHandler("progress", handler.handle_progress))
+        self.application.add_handler(CommandHandler("profile",  handler.handle_profile))
 
         # ── Watchlist ──
         self.application.add_handler(CommandHandler("watch",    handler.handle_watch))
