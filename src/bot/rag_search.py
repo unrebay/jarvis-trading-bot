@@ -93,13 +93,16 @@ class RAGSearch:
         allowed_levels = _levels_up_to(level)
 
         try:
+            # Pass filter_levels as PostgreSQL array literal (e.g. "{beginner,intermediate}")
+            # to avoid supabase-py serialization issues with text[] parameters.
+            pg_levels = "{" + ",".join(allowed_levels) + "}"
             response = self.supabase.rpc(
                 "match_knowledge_documents",
                 {
                     "query_embedding":  vector,
                     "match_count":      top_k,
-                    "match_threshold":  0.3,          # lowered from 0.7 — more results
-                    "filter_levels":    allowed_levels,
+                    "match_threshold":  0.3,
+                    "filter_levels":    pg_levels,
                 },
             ).execute()
             results = response.data or []
