@@ -259,7 +259,7 @@ def run_audit(verbose: bool = False, export: bool = False):
     print(f"{'═'*70}\n")
 
     for i, q in enumerate(AUDIT_QUESTIONS, 1):
-        docs = rag.search(q["question"], q["level"])
+        docs = rag.search(q["question"], level=q["level"])
         score, found_kws = score_result(docs, q["keywords"])
 
         status = "✅" if score >= 60 else ("⚠️ " if score >= 30 else "❌")
