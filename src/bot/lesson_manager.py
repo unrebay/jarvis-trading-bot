@@ -485,3 +485,46 @@ class LessonManager:
                 lines.append(f"    • {t}")
         lines.append("\nПример: /lesson FVG   или   /lesson Order Block")
         return "\n".join(lines)
+
+    def get_lesson_image(self, topic: str, supabase_client) -> dict | None:
+        """
+        Look up an educational image for the given topic/concept.
+
+        Tries in order:
+          1. Exact match on topic (case-insensitive)
+          2. ILIKE match on topic
+          3. ILIKE match on concept_type
+
+        Returns dict with {image_url, caption, concept_type} or None.
+        """
+        try:
+            # 1. Exact ilike on topic
+            res = supabase_client.table("lesson_images") \
+                .select("image_url, caption, concept_type") \
+                .ilike("topic", topic) \
+                .limit(1).execute()
+            if res.data:
+                return res.data[0]
+
+            # 2. Partial match: topic contains a keyword from query
+            # Try each word in the input as a search keyword
+            keywords = [w for w in topic.split() if len(w) >= 3]
+            for kw in keywords:
+                res2 = supabase_client.table("lesson_images") \
+                    .select("image_url, caption, concept_type") \
+                    .ilike("topic", f"%{kw}%") \
+                    .limit(1).execute()
+                if res2.data:
+                    return res2.data[0]
+
+            # 3. Match on concept_type
+            res3 = supabase_client.table("lesson_images") \
+                .select("image_url, caption, concept_type") \
+                .ilike("concept_type", f"%{topic.lower().replace(' ', '_')}%") \
+                .limit(1).execute()
+            if res3.data:
+                return res3.data[0]
+
+        except Exception as e:
+            print(f"⚠️ get_lesson_image error: {e}")
+        return None
