@@ -5,34 +5,48 @@
 
 ---
 
-## ✅ Фаза 1 — Качество базы знаний (ЗАВЕРШЕНО 2026-03-25)
+## ✅ Фаза 1 — Качество базы знаний (ЗАВЕРШЕНО 2026-03-26)
 
-**Результат: 95% покрытие, 30/30 вопросов ≥ 60%, все 11 модулей зелёные**
-Отчёт: `docs/kb_audit.md`
+**KB Audit: 95% · Model Audit: 80% · Git tag: `v1.0-phase1`**
+Отчёты: `docs/kb_audit.md` · `docs/model_audit.md`
 
-- [x] Аудит KB: 30 ключевых ICT вопросов (`scripts/audit_kb.py`)
-- [x] Удалены 10 дублей (220 → 210 документов)
+- [x] Аудит KB: 30 вопросов, 95% покрытие (`scripts/audit_kb.py --export`)
+- [x] Аудит модели: 10 вопросов, 80% качество ответов (`scripts/audit_model.py --export`)
+- [x] Удалены 10 дублей (220 → ~213 документов)
 - [x] Расширены тонкие документы (stb_bts, supply demand, inducement, Lunch, IFVG, VI, RB)
 - [x] Добавлены новые документы: Kill Zone, Gold sessions, Psychology
 - [x] RAG fix: smart `_extract_search_term()` — вместо полного запроса как ilike
+- [x] RAG fix: 3-pass keyword search (content+level → topic+level → content no filter)
 - [x] pgvector fix: убрана дублирующая функция + filter_levels как pg array literal
-- [x] Lowercase LEVEL_ORDER — совместим с DB constraint
+- [x] Lowercase LEVEL_ORDER — совместим с DB constraint (`beginner/intermediate/advanced`)
+- [x] Очищены стейл ветки: imac, macbook, production (локально)
 
 ---
 
 ## 🔴 Фаза 2 — TradingView интеграция (ТЕКУЩИЙ ПРИОРИТЕТ)
 
-- [ ] **Pine Script: перенести 5 детекторов**
-  - FVG, Order Block, BOS, CHoCH, Liquidity Sweep
-  - + HTF trend filter (SMA200 daily)
-  - + Session filter (London 08:00-10:00, NY 13:30-15:30 UTC)
-  - Визуально сверить с нашим Python бэктестом на XAUUSD
+> Требуется: TradingView Pro (для webhook алертов)
 
-- [ ] **Webhook сервер на VPS**
-  - FastAPI `POST /webhook/tradingview`
-  - Схема JSON: symbol, pattern, price, strength, session, direction
-  - Запись в Supabase таблицу `trading_signals`
-  - Telegram уведомление: "📊 FVG Bull · XAUUSD · 2850.5 · London"
+### 2.1 Pine Script детекторы (на TradingView)
+- [ ] **FVG детектор** — 3 свечи, бычий/медвежий, отображение зон
+- [ ] **Order Block детектор** — последняя свеча перед импульсом
+- [ ] **BOS/CHoCH детектор** — слом структуры с типом (bullish/bearish)
+- [ ] **HTF trend filter** — SMA200 на D1, определяет направление дня
+- [ ] **Session filter** — London KZ (02:00-05:00 NY), NY KZ (07:00-10:00 NY)
+- [ ] Визуальная проверка на XAUUSD — сверить с Python бэктестом
+
+### 2.2 Webhook сервер на VPS
+- [ ] **FastAPI сервер** `src/webhook/server.py`
+  - `POST /webhook/tradingview` — принимает JSON от TradingView
+  - Валидация secret token (чтобы не принимать чужие алерты)
+  - Сохранение в Supabase таблицу `trading_signals`
+- [ ] **Supabase таблица** `trading_signals`
+  - Поля: id, symbol, pattern, price, direction, session, tf, created_at
+- [ ] **Telegram уведомление**
+  - Формат: `📊 FVG Bull · XAUUSD · $2850.5 · London KZ · H1`
+  - Отправка в бот (или отдельный канал)
+- [ ] **TradingView алерт** — настроить alert → webhook URL на VPS
+- [ ] **Тест end-to-end**: TradingView сигнал → VPS → Supabase → Telegram
 
 ---
 
@@ -61,10 +75,12 @@
 
 ## ⏳ Waiting On
 
-- [ ] **Push develop ветки** — сделать `git push -u origin develop` с локальной машины
-- [ ] **Купить TradingView Pro** — нужен для webhook алертов
-- [ ] **Проверить что images работают в боте**
-  - `/example FVG`, `/example Order Block` → должны присылать картинки
+- [ ] **Купить TradingView Pro** — нужен для webhook алертов (Фаза 2)
+- [ ] **Удалить remote ветки** — `git push origin --delete imac macbook` (с Мака)
+- [ ] **VPS pull + restart** после каждого `git push origin develop`
+  ```bash
+  ssh root@77.110.126.107 "cd /opt/jarvis && git pull origin develop && systemctl restart jarvis-bot"
+  ```
 
 ---
 
