@@ -2,6 +2,13 @@
 JARVIS - Trading Education Bot
 Professional AI teacher for trading education (ICT/SMC)
 
+v3.2 — Daily learning reminders:
+- DailyReminder: finds users inactive > 22h and sends personalized nudges
+- PTB JobQueue: runs every day at 09:00 UTC (run_daily)
+- Personalized: shows next topic, level, XP from user_memory
+- 6 rotating message templates to avoid repetition
+- Graceful 403/400 handling (blocked bots)
+
 v2.5 — Live charts + Education system:
 - ChartGenerator: live OHLCV charts via yfinance + mplfinance (dark theme)
 - /chart SYMBOL TF → generates live chart + ICT/SMC annotation
@@ -20,6 +27,7 @@ v2.2 — Fixed architecture (single ClaudeClient, CostManager)
 """
 
 import os
+from datetime import time as dt_time, timezone
 from dotenv import load_dotenv
 from telegram import BotCommand
 from telegram.ext import (
@@ -30,6 +38,7 @@ from supabase import create_client, Client
 from .rag_search import RAGSearch
 from .telegram_handler import TelegramHandler
 from .claude_client import ClaudeClient
+from .reminders import DailyReminder
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Инициализация окружения
@@ -59,6 +68,17 @@ rag     = RAGSearch(supabase)
 handler = TelegramHandler(claude, supabase, rag)
 
 # ──────────────────────────────────────────────────────────────────────────────
+# JobQueue callback — daily reminder (called at 09:00 UTC every day)
+# ──────────────────────────────────────────────────────────────────────────────
+
+async def _daily_reminder_job(context) -> None:
+    """PTB JobQueue callback: send daily learning nudges to inactive users."""
+    reminder = DailyReminder(supabase, handler.user_memory)
+    sent = await reminder.send_reminders(context.bot)
+    print(f"📬 Daily reminder job finished: {sent} messages sent")
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Telegram Application
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -69,6 +89,13 @@ class JarvisBot:
 
     def _register_handlers(self):
         """Register all command and message handlers."""
+        # ── Daily reminders (v3.2) ──
+        self.application.job_queue.run_daily(
+            _daily_reminder_job,
+            time = dt_time(hour=9, minute=0, tzinfo=timezone.utc),
+            name = "daily_reminders",
+        )
+
         # ── Core ──
         self.application.add_handler(CommandHandler("start",    handler.handle_start))
         self.application.add_handler(CommandHandler("help",     handler.handle_help))
@@ -124,16 +151,17 @@ class JarvisBot:
 
     def run(self):
         """Start bot polling."""
-        print("🤖 JARVIS Bot v3.1 starting...")
-        print("   ├─ Claude:   Sonnet (vision/chart), Haiku (chat/memory)")
-        print("   ├─ RAG:      pgvector semantic search (238 docs, level-aware)")
-        print("   ├─ Lessons:  LessonManager 51 topics (/lesson /quiz /levelup)")
-        print("   ├─ Images:   8 ICT/SMC diagrams in Supabase Storage (/example)")
-        print("   ├─ Charts:   live yfinance + ChartAnnotator Sonnet (/chart)")
-        print("   ├─ Memory:   UserMemory portrait (Supabase, updates every 5 msgs)")
-        print("   ├─ Watch:    user_watchlist + TradingView webhook /alert")
-        print("   ├─ Budget:   CostManager ($1.00/day, FULL→LITE→OFFLINE)")
-        print("   └─ Telegram: polling mode + full command menu")
+        print("🤖 JARVIS Bot v3.2 starting...")
+        print("   ├─ Claude:     Sonnet (vision/chart), Haiku (chat/memory)")
+        print("   ├─ RAG:        pgvector semantic search (238 docs, level-aware)")
+        print("   ├─ Lessons:    LessonManager 51 topics (/lesson /quiz /levelup)")
+        print("   ├─ Images:     21 ICT/SMC diagrams in Supabase Storage (/example)")
+        print("   ├─ Charts:     live yfinance + ChartAnnotator Sonnet (/chart)")
+        print("   ├─ Memory:     UserMemory portrait (Supabase, updates every 5 msgs)")
+        print("   ├─ Reminders:  DailyReminder 09:00 UTC (inactive users, v3.2)")
+        print("   ├─ Watch:      user_watchlist + TradingView webhook /alert")
+        print("   ├─ Budget:     CostManager ($1.00/day, FULL→LITE→OFFLINE)")
+        print("   └─ Telegram:   polling mode + full command menu")
         self.application.run_polling(drop_pending_updates=True)
 
 
