@@ -2,32 +2,21 @@
 
 ## Active
 
-- [ ] **Починить pgvector RPC** - `match_knowledge_documents` возвращает 404, семантический поиск не работает (только keyword fallback)
-  - Проверить что функция существует в Supabase, пересоздать если нет
-  - Проверить что pgvector extension включён
-
-- [ ] **Защитный слой при деплое** - новые фичи не должны ронять бота целиком
-  - Обернуть JobQueue init в try/except (если APScheduler не установлен — логируем, продолжаем без напоминаний)
-  - Добавить smoke-test в CI: реально импортировать src.bot.main и проверить что не падает
-  - Добавить health-check endpoint для мониторинга
-
-- [ ] **Написать детекторы ICT/SMC паттернов** - модуль `src/patterns/`
-  - `detect_fvg(df)` — Fair Value Gap на OHLCV данных
-  - `detect_order_block(df)` — бычий/медвежий Order Block
-  - `detect_bos(df)` — Break of Structure
-  - `detect_liquidity_sweep(df)` — sweep внешней ликвидности
-  - Каждая функция: принимает pandas DataFrame, возвращает список сигналов с координатами и силой
-  - Unit-тесты на исторических данных
-
-- [ ] **Расширить базу знаний до 500+ документов**
-  - Добавить структурированные примеры сетапов для каждого концепта (вход, стоп, цель)
-  - Добавить Q&A пары для файн-тюнинга
-  - Форматировать как structured training data
+- [ ] **Запустить бэктест паттернов на реальных данных** - `python3 scripts/backtest_patterns.py`
+  - BTC-USD 4h 180d (основной тест)
+  - Проверить win rate каждого паттерна, отсечь неэффективные
+  - Результаты → задокументировать в docs/
 
 - [ ] **Freqtrade стратегия** - `freqtrade_strategy/JarvisICT.py`
   - Использовать детекторы из `src/patterns/` как условия входа
-  - Backtesting через freqtrade Hyperopt
-  - Документация по настройке и запуску
+  - Только паттерны с win rate > 50% из бэктеста
+  - Backtesting через freqtrade backtesting
+  - Документация по установке freqtrade и запуску
+
+- [ ] **Расширить базу знаний до 500+ документов**
+  - Добавить структурированные примеры сетапов (вход, стоп, цель, скриншот)
+  - Добавить Q&A пары для файн-тюнинга
+  - Форматировать как structured training data
 
 ## Waiting On
 
@@ -44,6 +33,11 @@
 
 ## Done
 
+- [x] ~~Детекторы паттернов src/patterns/ (FVG, OB, BOS, CHoCH, LiqSweep)~~ (2026-03-25)
+- [x] ~~Бэктест скрипт scripts/backtest_patterns.py~~ (2026-03-25)
+- [x] ~~Починить pgvector semantic search (параметры + регистр уровней)~~ (2026-03-25)
+- [x] ~~CI smoke test из requirements.txt~~ (2026-03-25)
+- [x] ~~Safe JobQueue init (try/except, non-fatal)~~ (2026-03-25)
 - [x] ~~Ежедневные напоминания (DailyReminder, JobQueue 09:00 UTC)~~ (2026-03-25)
 - [x] ~~21 диаграмма ICT/SMC в Supabase Storage~~ (2026-03-25)
 - [x] ~~`/example` команда + auto-image в handle_message~~ (2026-03-25)
