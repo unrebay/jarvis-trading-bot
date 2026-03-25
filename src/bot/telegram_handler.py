@@ -156,12 +156,13 @@ class TelegramHandler:
         args = context.args or []
         if not args:
             await update.message.reply_text(
-                "📈 Использование: /chart СИМВОЛ ТАЙМФРЕЙМ\n\n"
+                "📈 Использование: /chart СИМВОЛ ТАЙМФРЕЙМ [КОНЦЕПЦИЯ]\n\n"
                 "Примеры:\n"
                 "  /chart BTCUSDT 4h\n"
-                "  /chart EURUSD 1d\n"
-                "  /chart NQ 1h\n"
-                "  /chart GOLD 1w\n\n"
+                "  /chart EURUSD 4h FVG\n"
+                "  /chart NQ 1h OB\n"
+                "  /chart GOLD 1d структура\n\n"
+                "Концепции: FVG, OB, BOS, CHoCH, ликвидность, структура\n"
                 "Таймфреймы: 1m 5m 15m 1h 4h 1d 1w"
             )
             return
@@ -172,6 +173,7 @@ class TelegramHandler:
 
         symbol    = args[0].upper()
         timeframe = args[1].lower() if len(args) > 1 else "4h"
+        concept   = " ".join(args[2:]).strip() if len(args) > 2 else None
 
         await update.message.chat.send_action("upload_photo")
         await update.message.reply_text(f"📊 Генерирую чарт {symbol} {timeframe.upper()}...")
@@ -195,6 +197,8 @@ class TelegramHandler:
             "timeframe":     timeframe,
             "student_level": user_level,
         }
+        if concept:
+            ann_ctx["focus_concept"] = concept
         ann_result    = self.chart_annotator.analyze_chart(image_bytes, context=ann_ctx)
         drawing_instr = ann_result.get("drawing_instructions", {}) if ann_result.get("success") else {}
         analysis_text = ann_result.get("analysis_text", "") if ann_result.get("success") else ""
@@ -219,7 +223,8 @@ class TelegramHandler:
         # 5. Build caption
         change_sign = "+" if info["change_pct"] >= 0 else ""
         price_line  = f"{info['last_price']:,.4f}  ({change_sign}{info['change_pct']:.2f}%)"
-        header      = f"📊 {symbol} · {timeframe.upper()} · {price_line}"
+        concept_tag = f" · фокус: {concept.upper()}" if concept else ""
+        header      = f"📊 {symbol} · {timeframe.upper()}{concept_tag} · {price_line}"
         caption     = f"{header}\n\n{analysis_text}"[:1020]
 
         # 6. Send annotated chart
@@ -294,6 +299,18 @@ class TelegramHandler:
 
         lesson_text = self.lesson_manager.get_lesson(topic, user_level)
         await update.message.reply_text(lesson_text)
+
+        # Отправляем учебную картинку если есть
+        lesson_img = self.lesson_manager.get_lesson_image(topic, self.supabase)
+        if lesson_img:
+            try:
+                caption = lesson_img.get('caption') or f'📸 Пример: {topic}'
+                await update.message.reply_photo(
+                    photo=lesson_img['image_url'],
+                    caption=caption
+                )
+            except Exception as img_err:
+                print(f'⚠️ lesson image send error: {img_err}')
 
         # Логируем урок в БД
         self._save_lesson_request(user_id, topic, user_level, action="lesson")
@@ -555,6 +572,115 @@ class TelegramHandler:
             f"→ /lesson — начать первую тему",
             parse_mode="Markdown"
         )
+
+    # ── /example — educational image + concept chart ─────────────────────────
+
+    async def handle_example(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        /example [CONCEPT]
+        Shows an educational image for the concept (from lesson_images table),
+        or generates a live annotated chart if no static image is available.
+
+        Examples:
+          /example FVG
+          /example Order Block
+          /example BOS
+        """
+        user_id = update.effective_user.id
+        self._ensure_user_exists(user_id, update.effective_user.username or "Anonymous")
+
+        args    = context.args or []
+        concept = " ".join(args).strip()
+
+        if not concept:
+            await update.message.reply_text(
+                "🖼 Использование: /example КОНЦЕПЦИЯ\n\n"
+                "Примеры:\n"
+                "  /example FVG\n"
+                "  /example Order Block\n"
+                "  /example BOS\n"
+                "  /example ликвидность\n\n"
+                "Покажу учебную картинку или сгенерирую чарт с разметкой."
+            )
+            return
+
+        await update.message.chat.send_action("upload_photo")
+
+        # 1. Ищем статическую учебную картинку
+        lesson_img = self.lesson_manager.get_lesson_image(concept, self.supabase)
+        if lesson_img:
+            caption = lesson_img.get("caption") or f"📸 Пример: {concept}"
+            try:
+                await update.message.reply_photo(
+                    photo=lesson_img["image_url"],
+                    caption=f"🎓 *{concept}*\n\n{caption}",
+                    parse_mode="Markdown"
+                )
+                return
+            except Exception as e:
+                print(f"⚠️ static image error: {e}")
+
+        # 2. Нет статической — генерируем живой чарт с фокусом на концепцию
+        if not cost_manager.can_use_vision():
+            await update.message.reply_text("🟡 Лимит анализов исчерпан. Попробуй позже.")
+            return
+
+        await update.message.reply_text(
+            f"📊 Генерирую чарт с примером *{concept}*...",
+            parse_mode="Markdown"
+        )
+
+        memory     = self.user_memory.load(user_id)
+        user_level = memory.get("learning", {}).get("level", "Beginner")
+
+        # Выбираем дефолтный символ (EURUSD 4h — классика для ICT)
+        symbol, timeframe = "EURUSD", "4h"
+
+        gen_result = self.chart_generator.generate(symbol, timeframe)
+        if not gen_result["success"]:
+            await update.message.reply_text(f"❌ {gen_result['error']}")
+            return
+
+        image_bytes = gen_result["image"]
+
+        # Аннотируем с фокусом на нужную концепцию
+        ann_ctx = {
+            "instrument":    symbol,
+            "timeframe":     timeframe,
+            "student_level": user_level,
+            "focus_concept": concept,
+        }
+        ann_result    = self.chart_annotator.analyze_chart(image_bytes, context=ann_ctx)
+        drawing_instr = ann_result.get("drawing_instructions", {}) if ann_result.get("success") else {}
+        analysis_text = ann_result.get("analysis_text", "") if ann_result.get("success") else ""
+
+        # Рисуем аннотации
+        annotated_bytes = image_bytes
+        has_drawings = any([
+            drawing_instr.get("fvg_zones"),
+            drawing_instr.get("sr_levels"),
+            drawing_instr.get("bos_markers"),
+            drawing_instr.get("order_blocks"),
+            drawing_instr.get("liquidity_sweeps"),
+        ])
+        if has_drawings:
+            try:
+                from .chart_drawer import ChartDrawer
+                drawer = ChartDrawer(image_bytes)
+                annotated_bytes = drawer.draw(drawing_instr)
+            except Exception as draw_err:
+                print(f"⚠️ Drawing error: {draw_err}")
+
+        caption = f"🎓 *{concept}* — пример на {symbol} {timeframe.upper()}\n\n{analysis_text}"[:1020]
+
+        try:
+            await update.message.reply_photo(
+                photo   = InputFile(io.BytesIO(annotated_bytes), filename=f"example_{concept}.jpg"),
+                caption = caption,
+                parse_mode = "Markdown"
+            )
+        except Exception as e:
+            await update.message.reply_text(f"🎓 {concept}\n\n{analysis_text}"[:4000])
 
     # ── /profile — student portrait from user memory ───────────────────────────
 

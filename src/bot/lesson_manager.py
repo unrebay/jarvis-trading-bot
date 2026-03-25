@@ -485,3 +485,27 @@ class LessonManager:
                 lines.append(f"    • {t}")
         lines.append("\nПример: /lesson FVG   или   /lesson Order Block")
         return "\n".join(lines)
+
+    def get_lesson_image(self, topic: str, supabase_client=None) -> dict | None:
+        """
+        Look up a static educational image for the given topic.
+        Returns dict with {image_url, caption, concept_type} or None.
+        """
+        if not supabase_client:
+            return None
+        try:
+            # Try exact topic match first, then fuzzy (ILIKE)
+            resp = supabase_client.table("lesson_images").select(
+                "image_url, caption, concept_type"
+            ).ilike("topic", topic.strip()).limit(1).execute()
+            if resp.data:
+                return resp.data[0]
+            # Fallback: match by concept keyword in topic name
+            keyword = topic.split()[0].lower()
+            resp2 = supabase_client.table("lesson_images").select(
+                "image_url, caption, concept_type"
+            ).ilike("concept_type", f"%{keyword}%").limit(1).execute()
+            return resp2.data[0] if resp2.data else None
+        except Exception as e:
+            print(f"⚠️ get_lesson_image error: {e}")
+            return None

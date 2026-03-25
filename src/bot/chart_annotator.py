@@ -206,12 +206,19 @@ class ChartAnnotator:
     # ─── Prompt Builder ───────────────────────────────────────────────────────
 
     def _build_prompt(self, chart_info: Dict[str, Any]) -> str:
+        focus = chart_info.get("focus_concept")
+        focus_instruction = (
+            f"\n⚡ FOCUS: The student wants to learn about **{focus}**. "
+            f"Make sure to identify and explain ALL instances of {focus} on this chart. "
+            f"Prioritize {focus} in your analysis and in the drawing_instructions."
+        ) if focus else ""
         return f"""You are an expert ICT/SMC trading analyst. Analyze this chart image carefully.
 
 Chart context:
 - Instrument : {chart_info.get('instrument', 'Unknown')}
 - Timeframe  : {chart_info.get('timeframe',  'Unknown')}
 - Session    : {chart_info.get('session',    'Unknown')}
+{focus_instruction}
 
 === WHAT TO IDENTIFY ===
 

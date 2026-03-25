@@ -83,6 +83,7 @@ class JarvisBot:
         self.application.add_handler(CommandHandler("progress", handler.handle_progress))
         self.application.add_handler(CommandHandler("levelup",  handler.handle_levelup))
         self.application.add_handler(CommandHandler("profile",  handler.handle_profile))
+        self.application.add_handler(CommandHandler("example",  handler.handle_example))
 
         # ── Watchlist ──
         self.application.add_handler(CommandHandler("watch",    handler.handle_watch))
@@ -114,6 +115,7 @@ class JarvisBot:
             BotCommand("progress", "📊 Мой прогресс и XP"),
             BotCommand("profile",  "👤 Мой профиль (что JARVIS помнит)"),
             BotCommand("chart",    "📈 Чарт с анализом — /chart BTCUSDT 4h"),
+            BotCommand("example",  "🖼 Пример концепции — /example FVG"),
             BotCommand("watch",    "👁 Watchlist — /watch add BTCUSDT 4h"),
             BotCommand("status",   "💰 Бюджет и режим бота"),
         ]
@@ -121,7 +123,7 @@ class JarvisBot:
 
     def run(self):
         """Start bot polling."""
-        print("🤖 JARVIS Bot v2.6 starting...")
+        print("🤖 JARVIS Bot v3.0 starting...")
         print("   ├─ Claude:   Sonnet (vision/chart), Haiku (memory updates)")
         print("   ├─ Charts:   ChartGenerator (yfinance+mplfinance) + ChartAnnotator (Sonnet)")
         print("   ├─ Lessons:  LessonManager 51 topics (/lesson /quiz /progress /profile)")
