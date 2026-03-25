@@ -104,6 +104,10 @@ class JarvisBot:
         self.application.add_handler(CommandHandler("levelup",  handler.handle_levelup))
         self.application.add_handler(CommandHandler("profile",  handler.handle_profile))
         self.application.add_handler(CommandHandler("example",  handler.handle_example))
+<<<<<<< HEAD
+=======
+        self.application.add_handler(CommandHandler("stats",    handler.handle_stats))
+>>>>>>> imac
 
         # ── Watchlist ──
         self.application.add_handler(CommandHandler("watch",    handler.handle_watch))
@@ -134,6 +138,7 @@ class JarvisBot:
             BotCommand("levelup",  "⬆️ Сдать тест для перехода на след. уровень"),
             BotCommand("progress", "📊 Мой прогресс и XP"),
             BotCommand("profile",  "👤 Мой профиль (что JARVIS помнит)"),
+            BotCommand("example",  "🖼 Учебная диаграмма — /example FVG"),
             BotCommand("chart",    "📈 Чарт с анализом — /chart BTCUSDT 4h"),
             BotCommand("example",  "🖼 Пример концепции — /example FVG"),
             BotCommand("watch",    "👁 Watchlist — /watch add BTCUSDT 4h"),
@@ -144,14 +149,22 @@ class JarvisBot:
     def run(self):
         """Start bot polling."""
         print("🤖 JARVIS Bot v3.1 starting...")
+<<<<<<< HEAD
         print("   ├─ Claude:   Sonnet (vision/chart), Haiku (memory updates)")
         print("   ├─ Charts:   ChartGenerator (yfinance+mplfinance) + ChartAnnotator (Sonnet)")
         print("   ├─ Lessons:  LessonManager 51 topics (/lesson /quiz /progress /profile)")
         print("   ├─ Memory:   UserMemory (Supabase, updates every 5 msgs)")
+=======
+        print("   ├─ Claude:   Sonnet (vision/chart), Haiku (chat/memory)")
+        print("   ├─ RAG:      pgvector semantic search (238 docs, level-aware)")
+        print("   ├─ Lessons:  LessonManager 51 topics (/lesson /quiz /levelup)")
+        print("   ├─ Images:   8 ICT/SMC diagrams in Supabase Storage (/example)")
+        print("   ├─ Charts:   live yfinance + ChartAnnotator Sonnet (/chart)")
+        print("   ├─ Memory:   UserMemory portrait (Supabase, updates every 5 msgs)")
+>>>>>>> imac
         print("   ├─ Watch:    user_watchlist + TradingView webhook /alert")
         print("   ├─ Budget:   CostManager ($1.00/day, FULL→LITE→OFFLINE)")
-        print("   ├─ RAG:      Supabase pgvector (200 docs, 18 sections)")
-        print("   └─ Telegram: polling mode + bot commands menu")
+        print("   └─ Telegram: polling mode + full command menu")
         self.application.run_polling(drop_pending_updates=True)
 
 

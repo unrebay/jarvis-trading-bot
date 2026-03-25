@@ -777,6 +777,63 @@ class TelegramHandler:
         except Exception:
             await update.message.reply_text(text)
 
+    # ── /stats — admin analytics ──────────────────────────────────────────────
+
+    ADMIN_IDS = {5241327837}  # andy — добавь свой telegram_id если нужно
+
+    async def handle_stats(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """
+        /stats — admin-only analytics dashboard.
+        Shows: total users, lessons delivered, popular topics, level distribution.
+        """
+        user_id = update.effective_user.id
+        if user_id not in self.ADMIN_IDS:
+            await update.message.reply_text("⛔ Только для администратора.")
+            return
+
+        try:
+            # Total users
+            users_res = self.supabase.table("bot_users").select("user_id, level", count="exact").execute()
+            total_users = users_res.count or len(users_res.data or [])
+            users_data  = users_res.data or []
+
+            # Level distribution
+            level_counts: dict = {}
+            for u in users_data:
+                lvl = (u.get("level") or "Beginner")
+                level_counts[lvl] = level_counts.get(lvl, 0) + 1
+
+            # Lessons delivered (last 7 days)
+            lessons_res = self.supabase.table("lesson_requests") \
+                .select("topic, action") \
+                .execute()
+            lessons_data = lessons_res.data or []
+            total_lessons = sum(1 for r in lessons_data if r.get("action") == "lesson")
+            total_quizzes = sum(1 for r in lessons_data if r.get("action") == "quiz")
+
+            # Top-5 topics
+            from collections import Counter
+            topic_counts = Counter(
+                r["topic"] for r in lessons_data if r.get("action") == "lesson" and r.get("topic")
+            )
+            top_topics = topic_counts.most_common(5)
+
+            # Format
+            level_str = " | ".join(f"{l}: {c}" for l, c in sorted(level_counts.items()))
+            topics_str = "\n".join(f"  {i+1}. {t} ({c})" for i, (t, c) in enumerate(top_topics)) or "  нет данных"
+
+            await update.message.reply_text(
+                f"📊 *JARVIS — Аналитика*\n\n"
+                f"👥 Всего учеников: *{total_users}*\n"
+                f"📚 Уроков выдано: *{total_lessons}*\n"
+                f"🧠 Тестов пройдено: *{total_quizzes}*\n\n"
+                f"*Распределение по уровням:*\n{level_str}\n\n"
+                f"*Топ-5 тем:*\n{topics_str}",
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            await update.message.reply_text(f"❌ Ошибка: {e}")
+
     # ── /watch — user watchlist management ─────────────────────────────────────
 
     async def handle_watch(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
