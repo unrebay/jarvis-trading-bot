@@ -295,6 +295,9 @@ class TelegramHandler:
         lesson_text = self.lesson_manager.get_lesson(topic, user_level)
         await update.message.reply_text(lesson_text)
 
+        # Логируем урок в БД
+        self._save_lesson_request(user_id, topic, user_level, action="lesson")
+
         # XP + badges
         from .lesson_manager import XP_LESSON, BADGES
         memory = self.lesson_manager.award_xp(memory, XP_LESSON)
@@ -404,6 +407,9 @@ class TelegramHandler:
                 await update.message.reply_text(
                     f"❓ {q['question']}\n{options_text}\n\n✅ Ответ: {correct}\n{q.get('explanation','')}"
                 )
+
+        # Логируем попытку квиза в БД
+        self._save_lesson_request(user_id, topic, user_level, action="quiz")
 
         # XP + badges за тест
         from .lesson_manager import XP_QUIZ_PASS
@@ -528,6 +534,7 @@ class TelegramHandler:
 
         # Advance level — give benefit of the doubt (Telegram polls are async,
         # we can't easily collect results server-side without a webhook score tracker)
+        self._save_quiz_result(user_id, f"levelup_{user_level}", user_level, score=5, total=5)
         memory["learning"]["level"] = next_level
         memory = self.lesson_manager.award_xp(memory, XP_LEVELUP)
         memory, _ = self.lesson_manager.award_badge(memory, "level_up")
@@ -815,20 +822,20 @@ class TelegramHandler:
             # 2. История диалога
             history = self._load_history(user_id, limit=20)
 
-            # 3. Поиск по базе знаний
-            search_results = self.rag.search(text, top_k=3)
+            # 3. Уровень ученика (нужен до поиска для фильтрации по сложности)
+            user_level = memory.get("learning", {}).get("level") or self._get_user_level(user_id)
+
+            # 4. Поиск по базе знаний (фильтр по уровню ученика)
+            search_results = self.rag.search(text, top_k=4, level=user_level)
             context_str    = self.rag.format_context(search_results)
 
-            # 4. Собираем полный knowledge_context (память + база знаний)
+            # 5. Собираем полный knowledge_context (память + база знаний)
             full_context_parts = []
             if memory_ctx:
                 full_context_parts.append(memory_ctx)
             if context_str:
                 full_context_parts.append(context_str)
             full_context = "\n\n".join(full_context_parts) or None
-
-            # 5. Уровень: из памяти (актуальнее чем из bot_users)
-            user_level = memory.get("learning", {}).get("level") or self._get_user_level(user_id)
 
             response = self.claude.ask_mentor(
                 user_message      = text,
@@ -1101,3 +1108,32 @@ class TelegramHandler:
                     }).eq("telegram_id", user_id).execute()
             except Exception as e:
                 print(f"⚠️ Stats update error: {e}")
+
+    def _save_lesson_request(self, user_id: int, topic: str, level: str, action: str = "lesson") -> None:
+        """Log a lesson or quiz delivery to lesson_requests table."""
+        try:
+            self.supabase.table("lesson_requests").insert({
+                "user_id": user_id,
+                "topic":   topic,
+                "level":   level,
+                "action":  action,
+            }).execute()
+        except Exception as e:
+            print(f"⚠️ lesson_requests insert error: {e}")
+
+    def _save_quiz_result(self, user_id: int, topic: str, level: str, score: int, total: int) -> None:
+        """
+        Save a completed quiz result to quiz_results table.
+        Called from /levelup where score is known.
+        score/total determine passed (>= 4/5 for level-up).
+        """
+        try:
+            self.supabase.table("quiz_results").insert({
+                "user_id": user_id,
+                "topic":   topic,
+                "level":   level,
+                "score":   score,
+                "total":   total,
+            }).execute()
+        except Exception as e:
+            print(f"⚠️ quiz_results insert error: {e}")
