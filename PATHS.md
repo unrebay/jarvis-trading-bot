@@ -1,160 +1,126 @@
-# JARVIS Bot — All Paths & Locations Reference
-
-> This file exists so that Claude always knows exactly where everything lives.
-> Update this file if any paths change.
-
----
-
-## 🌿 Git Branch Strategy
-
-| Branch | Device | Role |
-|--------|--------|------|
-| `main` | VPS / any | **Production** — стабильный код, только финальные merge-ы. VPS работает с этой веткой. |
-| `macbook` | MacBook | **Daily dev** — разработка фич, правки бота, тесты. PR → main. |
-| `imac` | iMac | **Heavy tasks** — видео-транскрипции (Whisper), embeddings, Notion ingestion, аналитика. PR → main. |
-
-**Правило:** `macbook` и `imac` → PR → `main` → автодеплой на VPS.
+# JARVIS Bot — Architecture & Paths Reference
+> Единый источник правды. Обновляй при любых изменениях структуры.
+> Last updated: 2026-03-25 (v2.7)
 
 ---
 
-## 📁 MacBook (ветка `macbook`)
+## 🏗️ Инфраструктура
 
-| What | Path |
-|------|------|
-| Project root | `/Users/andy/jarvis-trading-bot` |
-| Bot source code | `/Users/andy/jarvis-trading-bot/src/bot/` |
-| Entry point | `/Users/andy/jarvis-trading-bot/src/bot/main.py` |
-| Telegram handler | `/Users/andy/jarvis-trading-bot/src/bot/telegram_handler.py` |
-| Claude client | `/Users/andy/jarvis-trading-bot/src/bot/claude_client.py` |
-| RAG search | `/Users/andy/jarvis-trading-bot/src/bot/rag_search.py` |
-| Cost manager | `/Users/andy/jarvis-trading-bot/src/bot/cost_manager.py` |
-| System prompt | `/Users/andy/jarvis-trading-bot/system/prompts/mentor.md` |
-| Knowledge base | `/Users/andy/jarvis-trading-bot/kb/` |
-| API keys / secrets | `/Users/andy/jarvis-trading-bot/.env` |
-| Python deps | `/Users/andy/jarvis-trading-bot/requirements.txt` |
-| Deploy scripts | `/Users/andy/jarvis-trading-bot/deploy/` |
-| Architecture HTML | `/Users/andy/jarvis-trading-bot/JARVIS-ARCHITECTURE.html` |
-| Archive (old files) | `/Users/andy/jarvis-trading-bot/archive/` |
+| Компонент | Сервис | Назначение |
+|-----------|--------|-----------|
+| **Bot runtime** | VPS (Ubuntu) | Постоянный процесс, polling mode |
+| **Database** | Supabase (eu-central-1) | Postgres + pgvector RAG |
+| **CI/CD** | GitHub Actions | Авто-деплой push→main→VPS |
+| **AI — ментор** | Anthropic Claude | Haiku (чат) / Sonnet (vision) |
+| **AI — embeddings** | OpenAI text-embedding-3-small | Семантический поиск по KB |
+| **Бот** | Telegram @setandforg3t_bot | Интерфейс с учеником |
+| **Данные** | Discord | Скачивание чартов и материалов |
+| **Знания** | Notion | Контент (опционально) |
 
 ---
 
-## 🍎 iMac (ветка `imac`)
+## 🌿 Ветки Git
 
-| What | Path |
-|------|------|
-| Project root | `/Users/andy/jarvis-trading-bot` (ветка `imac`) |
-| Whisper setup | `scripts/setup_whisper.sh` |
-| Video ingestion | `scripts/video_ingestion.py` |
-| Notion ingestion | `scripts/notion_ingestion.py` |
-| Embeddings filler | `fill_embeddings.py` |
-| Transcribed videos | `data/video_manifest.json` |
+| Ветка | Устройство | Роль |
+|-------|-----------|------|
+| main  | VPS | Production — только финальный код. Пуш → автодеплой |
+| imac  | iMac | Основная разработка — новые фичи, embeddings, DB-работы |
+| macbook | MacBook | Быстрые фиксы — мелкие правки без iMac |
 
-**iMac-only задачи:** транскрипция видео (Whisper Metal GPU), генерация embeddings (OpenAI), Notion → Supabase sync.
+Workflow:
+  imac / macbook → push → CI проверяет → merge в main → автодеплой на VPS
 
----
-
-## 🖥️ VPS (77.110.126.107, ветка `main`)
-
-| What | Path |
-|------|------|
-| **SSH access** | `ssh root@77.110.126.107` (pwd: `3wvieZOZ5EdV`) |
-| **SSH shortcut** | `ssh jarvis-vps` (after running `setup_ssh_keys.sh`) |
-| Project root | `/opt/jarvis/` |
-| Bot source code | `/opt/jarvis/src/bot/` |
-| Entry point | `/opt/jarvis/src/bot/main.py` |
-| System prompt | `/opt/jarvis/system/prompts/mentor.md` |
-| Knowledge base | `/opt/jarvis/kb/` |
-| API keys / secrets | `/opt/jarvis/.env` |
-| Python deps | `/opt/jarvis/requirements.txt` |
-| Python venv | `/opt/jarvis/venv/` |
-| Python binary | `/opt/jarvis/venv/bin/python3` |
-| Deploy scripts | `/opt/jarvis/deploy/` |
-| Systemd service file | `/etc/systemd/system/jarvis-bot.service` |
-| Bot logs | `journalctl -u jarvis-bot` |
+После каждого пуша в main GitHub Actions автоматически синхронизирует imac и macbook.
 
 ---
 
-## ☁️ External Services
+## 📁 Структура проекта
 
-| Service | Details |
-|---------|---------|
-| **Telegram Bot** | Bot token in `.env` → `TELEGRAM_BOT_TOKEN` |
-| **Anthropic API** | Key in `.env` → `ANTHROPIC_API_KEY`; Haiku (mentoring), Sonnet (JSON structuring), Opus (analysis) |
-| **Supabase project** | ID: `ivifpljgzsmstirlrjar`, region: eu-central-1 |
-| **Supabase URL** | In `.env` → `SUPABASE_URL` |
-| **Supabase key** | In `.env` → `SUPABASE_ANON_KEY` |
-| **Notion page** | https://www.notion.so/32c76cda92398173a5dadb440e652c3f |
-
----
-
-## 🗄️ Supabase Database Tables
-
-| Table | Purpose | Key columns |
-|-------|---------|-------------|
-| `knowledge_documents` | RAG knowledge base (61 lessons) | `id`, `section`, `topic`, `title`, `content`, `metadata` |
-| `bot_users` | Telegram users registry | `telegram_id`, `username`, `level`, `messages_count` |
-| `conversations` | Message history per user | `user_id`, `role`, `content`, `created_at` |
-
-**Sections in `knowledge_documents`** (column name is `section`, NOT `category`):
-- `principles` — 20 lessons (ICT/SMC fundamentals, BPR, OB, etc.)
-- `market-mechanics` — 13 lessons (Sessions, Asia levels, STDV, etc.)
-- `tda-and-entry-models` — 9 lessons (TDA, Wyckoff, Static/Dynamic)
-- `gold-mechanics` — 8 lessons (FVG, IMB, targets, timings)
-- `risk-management` — 6 lessons (Backtest, RR, position sizing)
-- `beginners` — 3 lessons (platforms, terminology, basics)
-- `structure-and-liquidity` — 2 lessons (structure, liquidity)
-
----
-
-## 🔧 Deploy Scripts (run from Mac terminal)
-
-| Script | Where to run | What it does |
-|--------|-------------|--------------|
-| `deploy/setup_ssh_keys.sh` | Mac (once) | Generates SSH key, uploads to VPS → no more passwords |
-| `deploy/push_to_vps.sh` | Mac (each update) | Rsyncs code + triggers VPS setup + restarts bot |
-| `deploy/setup_vps.sh` | VPS (auto-called) | Installs deps, configures systemd, starts bot |
-
-**Quick deploy command (from project root):**
-```bash
-cd /Users/andy/jarvis-trading-bot && bash deploy/push_to_vps.sh
-```
-
----
-
-## 🤖 Bot systemd Service
-
-| Command | Action |
-|---------|--------|
-| `systemctl status jarvis-bot` | Check if running |
-| `systemctl restart jarvis-bot` | Restart after code changes |
-| `systemctl stop jarvis-bot` | Stop the bot |
-| `systemctl enable jarvis-bot` | Auto-start on VPS reboot |
-| `journalctl -u jarvis-bot -f` | Live log stream |
-| `journalctl -u jarvis-bot -n 50` | Last 50 log lines |
-
----
-
-## 📦 Key Python Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `python-telegram-bot` | 20.7 | Telegram polling |
-| `anthropic` | 0.49.0 | Claude API |
-| `supabase` | ≥2.0.0 | Database |
-| `python-dotenv` | 1.0.0 | Load `.env` |
-
----
-
-## 🗂️ Source Files Summary
-
-```
 src/bot/
-├── main.py              ← Entry point, wires everything together
-├── telegram_handler.py  ← All message/command handlers, CostManager integration
-├── claude_client.py     ← ClaudeClient: ask_mentor(), model routing, prompt cache
-├── rag_search.py        ← keyword_search() + format_context() via Supabase
-├── cost_manager.py      ← BotMode (FULL/LITE/OFFLINE), $1/day budget, throttling
-├── image_handler.py     ← Vision analysis for chart photos
-├── chart_annotator.py   ← Chart annotation helper
-└── __init__.py
-```
+  main.py              - Точка входа, регистрация хэндлеров
+  telegram_handler.py  - Все команды (/lesson, /quiz, /levelup, ...)
+  claude_client.py     - Запросы к Claude API (ментор + vision)
+  rag_search.py        - Семантический поиск по KB (pgvector + keyword)
+  lesson_manager.py    - Учебная программа, XP, уровни, бейджи
+  user_memory.py       - Портрет ученика (JSONB в Supabase)
+  cost_manager.py      - Лимиты API, дневной бюджет
+  chart_generator.py   - Генерация свечных графиков (yfinance)
+  chart_annotator.py   - Аннотация графиков (Pillow)
+  image_handler.py     - Обработка входящих картинок
+
+src/ingestion/
+  add_structured_content.py  - Добавление доков в KB (индикаторы/модели/системы)
+  re_embed_missing.py        - Генерация эмбеддингов для docs без векторов
+
+system/prompts/mentor.md   - Системный промпт JARVIS-ментора
+tests/unit/                - Юнит-тесты
+supabase/migrations/       - SQL миграции БД
+.github/workflows/         - CI/CD
+
+---
+
+## 🗄️ Supabase — таблицы
+
+| Таблица | Назначение |
+|---------|-----------|
+| knowledge_documents | База знаний (220 docs), embedding vector(1536), difficulty_level |
+| bot_users | Пользователи Telegram, уровень, статистика |
+| user_memory | JSONB-портрет каждого ученика (XP, бейджи, темы, уровень) |
+| conversations | История диалогов (последние 20 сообщений на пользователя) |
+| user_watchlist | Тикеры в вотч-листе |
+| quiz_results | Результаты финальных тестов уровня |
+| lesson_requests | Лог выданных уроков и квизов |
+
+Индекс: HNSW на embedding (m=16, ef_construction=64)
+
+---
+
+## 🔑 Переменные окружения
+
+| Переменная | Описание |
+|-----------|---------|
+| TELEGRAM_BOT_TOKEN | Токен бота |
+| ANTHROPIC_API_KEY | Claude API |
+| SUPABASE_URL | https://ivifpljgzsmstirlrjar.supabase.co |
+| SUPABASE_ANON_KEY | Публичный anon-ключ |
+| OPENAI_API_KEY | Для генерации эмбеддингов |
+| DISCORD_TOKEN | Скачивание медиа из Discord (iMac) |
+| VPS_HOST | GitHub Secret — IP VPS |
+| VPS_USER | GitHub Secret — SSH пользователь |
+| VPS_SSH_KEY | GitHub Secret — SSH приватный ключ |
+
+---
+
+## 💻 Пути на устройствах
+
+| Устройство | Путь | Ветка |
+|-----------|------|-------|
+| iMac | ~/jarvis-trading-bot | imac |
+| MacBook | ~/jarvis-trading-bot | macbook |
+| VPS | /opt/jarvis | main |
+
+---
+
+## 🤖 Учебная программа
+
+Уровни: Beginner → Elementary → Intermediate → Advanced → Professional
+Переход: 80% тем → /levelup → 5-вопросный тест → +500 XP + новый уровень
+XP: /lesson +50 | /quiz +100 | /levelup +500
+
+---
+
+## 🚀 Стандартный деплой
+
+  git add -p && git commit -m "feat: ..."
+  git push origin imac          # CI проверяет синтаксис
+  git checkout main
+  git merge imac --no-edit
+  git push origin main          # автодеплой на VPS (~30 сек)
+
+---
+
+## 📝 Ingestion (запускать на iMac)
+
+  python -m src.ingestion.add_structured_content   # добавить контент в KB
+  python -m src.ingestion.re_embed_missing          # сгенерировать эмбеддинги
+  python scripts/analyze_kb.py                      # анализ KB

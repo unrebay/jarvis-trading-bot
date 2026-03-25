@@ -50,11 +50,13 @@ DEFAULT_MEMORY: dict = {
         "traits": [],           # ["прямой", "аналитический", "нетерпеливый"...]
     },
     "learning": {
-        "level": "Intermediate",
+        "level": "Beginner",
         "topics_known":       [],   # темы, которые ученик уже знает
         "topics_struggling":  [],   # темы, где путается / переспрашивает
         "current_focus":      None, # что сейчас изучает
         "questions_asked":    0,
+        "xp":                 0,    # опыт (геймификация)
+        "badges":             [],   # значки: ["first_lesson", "first_quiz", ...]
     },
     "conversations": {
         "summary":        "",   # краткое резюме всех разговоров (2-4 предложения)
@@ -162,7 +164,7 @@ class UserMemory:
             parts.append(f"Брокер/биржа: {profile['broker']}")
 
         # ── Learning ──
-        level = learning.get("level", "Intermediate")
+        level = learning.get("level", "Beginner")
         parts.append(f"Уровень: {level}")
 
         if learning.get("topics_known"):

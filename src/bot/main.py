@@ -21,6 +21,7 @@ v2.2 — Fixed architecture (single ClaudeClient, CostManager)
 
 import os
 from dotenv import load_dotenv
+from telegram import BotCommand
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, filters
 )
@@ -80,6 +81,8 @@ class JarvisBot:
         self.application.add_handler(CommandHandler("lesson",   handler.handle_lesson))
         self.application.add_handler(CommandHandler("quiz",     handler.handle_quiz))
         self.application.add_handler(CommandHandler("progress", handler.handle_progress))
+        self.application.add_handler(CommandHandler("levelup",  handler.handle_levelup))
+        self.application.add_handler(CommandHandler("profile",  handler.handle_profile))
 
         # ── Watchlist ──
         self.application.add_handler(CommandHandler("watch",    handler.handle_watch))
@@ -97,17 +100,36 @@ class JarvisBot:
             MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_message)
         )
 
+        # ── Register commands in Telegram menu ──
+        self.application.post_init = self._set_bot_commands
+
+    async def _set_bot_commands(self, application):
+        """Register commands so they appear in the Telegram '/' menu."""
+        commands = [
+            BotCommand("start",    "👋 Начать / перезапустить бота"),
+            BotCommand("help",     "📖 Список всех команд"),
+            BotCommand("lesson",   "🎓 Следующий урок по программе"),
+            BotCommand("quiz",     "❓ Тест по теме — /quiz FVG"),
+            BotCommand("levelup",  "⬆️ Сдать тест для перехода на след. уровень"),
+            BotCommand("progress", "📊 Мой прогресс и XP"),
+            BotCommand("profile",  "👤 Мой профиль (что JARVIS помнит)"),
+            BotCommand("chart",    "📈 Чарт с анализом — /chart BTCUSDT 4h"),
+            BotCommand("watch",    "👁 Watchlist — /watch add BTCUSDT 4h"),
+            BotCommand("status",   "💰 Бюджет и режим бота"),
+        ]
+        await application.bot.set_my_commands(commands)
+
     def run(self):
         """Start bot polling."""
-        print("🤖 JARVIS Bot v2.5 starting...")
-        print("   ├─ Claude:   Haiku (all, dev mode — switch to Sonnet/Opus for prod)")
-        print("   ├─ Charts:   ChartGenerator (yfinance+mplfinance) + ChartAnnotator + ChartDrawer")
-        print("   ├─ Lessons:  LessonManager (/lesson /quiz /progress)")
+        print("🤖 JARVIS Bot v2.6 starting...")
+        print("   ├─ Claude:   Sonnet (vision/chart), Haiku (memory updates)")
+        print("   ├─ Charts:   ChartGenerator (yfinance+mplfinance) + ChartAnnotator (Sonnet)")
+        print("   ├─ Lessons:  LessonManager 51 topics (/lesson /quiz /progress /profile)")
         print("   ├─ Memory:   UserMemory (Supabase, updates every 5 msgs)")
         print("   ├─ Watch:    user_watchlist + TradingView webhook /alert")
         print("   ├─ Budget:   CostManager ($1.00/day, FULL→LITE→OFFLINE)")
-        print("   ├─ RAG:      Supabase keyword search (61 lessons)")
-        print("   └─ Telegram: polling mode")
+        print("   ├─ RAG:      Supabase pgvector (200 docs, 18 sections)")
+        print("   └─ Telegram: polling mode + bot commands menu")
         self.application.run_polling(drop_pending_updates=True)
 
 

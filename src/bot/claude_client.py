@@ -184,7 +184,7 @@ class ClaudeClient:
         self,
         user_message: str,
         history: Optional[list] = None,
-        level: str = "Intermediate",
+        level: str = "Beginner",
         knowledge_context: Optional[str] = None,
     ) -> str:
         """
@@ -208,23 +208,25 @@ class ClaudeClient:
         if history is None:
             history = []
 
-        # Подготовка контекста уровня
-        level_context = f"Уровень обучения пользователя: {level}. Адаптируй сложность объяснений."
-        if knowledge_context:
-            level_context += f"\n\nДополнительный контекст:\n{knowledge_context}"
+        # Уровень передаётся через системный блок — НЕ в тело user-сообщения,
+        # чтобы бот не упоминал уровень в каждом ответе.
+        dynamic_system: list[dict] = [self._build_cached_system()]
 
-        # Построение сообщений с кешем
+        level_block_parts = [f"Уровень ученика: {level}."]
+        if knowledge_context:
+            level_block_parts.append(f"\nДополнительный контекст:\n{knowledge_context}")
+        dynamic_system.append({"type": "text", "text": "".join(level_block_parts)})
+
+        # Построение сообщений — только реальные сообщения, без вшитого уровня
         messages = history.copy()
         if not any(msg.get("role") == "user" and msg.get("content") == user_message for msg in messages):
-            messages.append({"role": "user", "content": f"{level_context}\n\n{user_message}"})
+            messages.append({"role": "user", "content": user_message})
 
         def _call_haiku():
             return self.client.messages.create(
                 model=HAIKU,
                 max_tokens=1024,
-                system=[
-                    self._build_cached_system(),
-                ],
+                system=dynamic_system,
                 messages=messages,
             )
 
@@ -581,7 +583,7 @@ if __name__ == "__main__":
     # Пример: запрос к ментору
     response = client.ask_mentor(
         user_message="Что такое FVG и как его торговать?",
-        level="Intermediate",
+        level="Beginner",
         knowledge_context="Ищу понимание принципов Fair Value Gap на EUR/USD",
     )
     print("Ответ ментора:")

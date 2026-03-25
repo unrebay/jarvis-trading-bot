@@ -1,4 +1,4 @@
-name: Sync main to macbook-clean
+name: Sync main → macbook & imac
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
       - main
 
 jobs:
-  sync:
+  sync-macbook:
+    name: Sync main into macbook
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,10 +15,27 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Merge main into macbook-clean
+      - name: Merge main into macbook
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git checkout macbook-clean
-          git merge origin/main --no-edit
-          git push origin macbook-clean
+          git checkout macbook
+          git merge origin/main --no-edit --allow-unrelated-histories || true
+          git push origin macbook
+
+  sync-imac:
+    name: Sync main into imac
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge main into imac
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git checkout imac
+          git merge origin/main --no-edit --allow-unrelated-histories || true
+          git push origin imac
