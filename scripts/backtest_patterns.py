@@ -37,6 +37,19 @@ backtest_patterns.py — Бэктест ICT/SMC паттернов на исто
 import argparse
 import sys
 import os
+import ssl
+
+# ── macOS SSL fix ─────────────────────────────────────────────────────────────
+# Python venv on macOS often lacks system certificates → SSL errors with yfinance.
+# This patches the default context to match system certs before any network call.
+try:
+    import certifi
+    os.environ.setdefault("SSL_CERT_FILE", certifi.where())
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", certifi.where())
+except ImportError:
+    # certifi not installed — fall back to unverified context (dev only)
+    ssl._create_default_https_context = ssl._create_unverified_context
+
 from dataclasses import dataclass, field
 from typing import List
 
