@@ -5,35 +5,22 @@
 
 ---
 
-## 🔴 Фаза 1 — Качество базы знаний (ТЕКУЩИЙ ПРИОРИТЕТ)
+## ✅ Фаза 1 — Качество базы знаний (ЗАВЕРШЕНО 2026-03-25)
 
-> Пока KB не проверена на правильность ответов — торговую часть не трогаем.
+**Результат: 95% покрытие, 30/30 вопросов ≥ 60%, все 11 модулей зелёные**
+Отчёт: `docs/kb_audit.md`
 
-- [ ] **Аудит KB: прогнать 30 ключевых ICT вопросов**
-  - Записать ответы бота, отметить правильные / неправильные
-  - Цель: 90%+ правильных ответов на базовые концепции курса
-  - Скрипт: `scripts/audit_kb.py`
-
-- [ ] **Устранить дубли тем** (160+ тем → ~80 качественных)
-  - market-structure (beginner/intermediate/advanced/Структура рынка → 1 тема)
-  - liquidity, FVG, order-flow, inducement — аналогично
-  - Скрипт: `scripts/deduplicate_kb.py`
-
-- [ ] **Заполнить тонкие документы** (10 штук < 600 симв.)
-  - stb_bts (337 симв.), Indices Mechanics homework (303 симв.)
-  - supply demand zone, inducement beginner, gap
-
-- [ ] **Стандартизировать имена тем** (English only, snake_case)
-  - Убрать кириллические названия тем
-  - Привести к формату: `fair_value_gap`, `order_block`, `bos_choch`
-
-- [ ] **Загрузить материалы курса которых не хватает**
-  - channels.txt, channels2.txt — не представлены в KB
-  - Проверить полное покрытие всех 20 модулей курса
+- [x] Аудит KB: 30 ключевых ICT вопросов (`scripts/audit_kb.py`)
+- [x] Удалены 10 дублей (220 → 210 документов)
+- [x] Расширены тонкие документы (stb_bts, supply demand, inducement, Lunch, IFVG, VI, RB)
+- [x] Добавлены новые документы: Kill Zone, Gold sessions, Psychology
+- [x] RAG fix: smart `_extract_search_term()` — вместо полного запроса как ilike
+- [x] pgvector fix: убрана дублирующая функция + filter_levels как pg array literal
+- [x] Lowercase LEVEL_ORDER — совместим с DB constraint
 
 ---
 
-## 🟡 Фаза 2 — TradingView интеграция (после Фазы 1)
+## 🔴 Фаза 2 — TradingView интеграция (ТЕКУЩИЙ ПРИОРИТЕТ)
 
 - [ ] **Pine Script: перенести 5 детекторов**
   - FVG, Order Block, BOS, CHoCH, Liquidity Sweep
