@@ -104,9 +104,11 @@ class TelegramHandler:
             "/progress reset — сбросить прогресс\n"
             "/profile — что JARVIS помнит о тебе\n"
             "/profile reset — сбросить профиль\n\n"
-            "📈 *Графики*\n"
-            "/chart BTCUSDT 4h — чарт + ICT/SMC анализ\n"
-            "/chart EURUSD 1d — любой инструмент\n"
+            "📈 *Графики и примеры*\n"
+            "/example FVG — учебная диаграмма концепции\n"
+            "/example OB — Order Block, BOS, Liquidity...\n"
+            "/chart BTCUSDT 4h — живой чарт + ICT/SMC анализ\n"
+            "/chart EURUSD 4h FVG — чарт с фокусом на концепцию\n"
             "📎 Отправь скриншот — нарисую FVG, OB, BOS\n\n"
             "👁 *Watchlist*\n"
             "/watch — показать список\n"
@@ -998,6 +1000,46 @@ class TelegramHandler:
             except Exception as md_error:
                 logger.debug(f"Markdown parse failed (falling back to plain text): {md_error}")
                 await update.message.reply_text(reply)
+
+            # 10. Автоматически прикрепляем учебную картинку если просят визуально
+            visual_keywords = [
+                "картинк", "картинку", "нарисуй", "покажи пример", "визуально",
+                "с примером", "пример на граф", "покажи на граф", "с картинк",
+                "хочу увидеть", "можешь показать", "пришли картинк", "с график",
+                "пример fvg", "пример ob", "пример bos", "пример ord",
+            ]
+            text_lower = text.lower()
+            wants_visual = any(kw in text_lower for kw in visual_keywords)
+
+            if wants_visual:
+                # Пытаемся определить концепцию из запроса
+                concept_map = {
+                    "fvg": "FVG", "fair value": "FVG", "имбаланс": "FVG", "дисбаланс": "FVG",
+                    "order block": "Order Block", "ob ": "Order Block", "блок ордер": "Order Block",
+                    "bos": "BOS", "choch": "BOS", "структур": "Market Structure",
+                    "market structure": "Market Structure",
+                    "liquidity": "Liquidity", "ликвидност": "Liquidity",
+                    "premium": "Premium/Discount", "discount": "Premium/Discount",
+                    "inducement": "Inducement", "idm": "Inducement",
+                    "amd": "AMD", "power of three": "AMD", "po3": "AMD",
+                }
+                detected_concept = None
+                for kw, concept in concept_map.items():
+                    if kw in text_lower:
+                        detected_concept = concept
+                        break
+
+                if detected_concept:
+                    lesson_img = self.lesson_manager.get_lesson_image(detected_concept, self.supabase)
+                    if lesson_img:
+                        try:
+                            await update.message.reply_photo(
+                                photo=lesson_img["image_url"],
+                                caption=f"🎓 *{detected_concept}* — учебная диаграмма\n\n{lesson_img.get('caption', '')}",
+                                parse_mode="Markdown"
+                            )
+                        except Exception as img_err:
+                            print(f"⚠️ Auto-image error: {img_err}")
 
         except Exception as e:
             print(f"❌ Message error: {e}")
