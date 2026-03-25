@@ -21,6 +21,7 @@ v2.2 — Fixed architecture (single ClaudeClient, CostManager)
 
 import os
 from dotenv import load_dotenv
+from telegram import BotCommand
 from telegram.ext import (
     Application, CommandHandler, MessageHandler, filters
 )
@@ -98,17 +99,35 @@ class JarvisBot:
             MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_message)
         )
 
+        # ── Register commands in Telegram menu ──
+        self.application.post_init = self._set_bot_commands
+
+    async def _set_bot_commands(self, application):
+        """Register commands so they appear in the Telegram '/' menu."""
+        commands = [
+            BotCommand("start",    "👋 Начать / перезапустить бота"),
+            BotCommand("help",     "📖 Список всех команд"),
+            BotCommand("status",   "💰 Бюджет и режим бота"),
+            BotCommand("chart",    "📈 Сгенерировать чарт  — /chart BTCUSDT 4h"),
+            BotCommand("lesson",   "🎓 Урок по теме  — /lesson FVG"),
+            BotCommand("quiz",     "❓ Тест по теме  — /quiz OB"),
+            BotCommand("progress", "📊 Мой прогресс обучения"),
+            BotCommand("profile",  "👤 Мой профиль (что JARVIS помнит)"),
+            BotCommand("watch",    "👁 Watchlist  — /watch add BTCUSDT 4h"),
+        ]
+        await application.bot.set_my_commands(commands)
+
     def run(self):
         """Start bot polling."""
-        print("🤖 JARVIS Bot v2.5 starting...")
-        print("   ├─ Claude:   Haiku (all, dev mode — switch to Sonnet/Opus for prod)")
-        print("   ├─ Charts:   ChartGenerator (yfinance+mplfinance) + ChartAnnotator + ChartDrawer")
-        print("   ├─ Lessons:  LessonManager (/lesson /quiz /progress)")
+        print("🤖 JARVIS Bot v2.6 starting...")
+        print("   ├─ Claude:   Sonnet (vision/chart), Haiku (memory updates)")
+        print("   ├─ Charts:   ChartGenerator (yfinance+mplfinance) + ChartAnnotator (Sonnet)")
+        print("   ├─ Lessons:  LessonManager 51 topics (/lesson /quiz /progress /profile)")
         print("   ├─ Memory:   UserMemory (Supabase, updates every 5 msgs)")
         print("   ├─ Watch:    user_watchlist + TradingView webhook /alert")
         print("   ├─ Budget:   CostManager ($1.00/day, FULL→LITE→OFFLINE)")
-        print("   ├─ RAG:      Supabase keyword search (61 lessons)")
-        print("   └─ Telegram: polling mode")
+        print("   ├─ RAG:      Supabase pgvector (200 docs, 18 sections)")
+        print("   └─ Telegram: polling mode + bot commands menu")
         self.application.run_polling(drop_pending_updates=True)
 
 
