@@ -2,13 +2,33 @@
 JARVIS - Trading Education Bot
 Professional AI teacher for trading education (ICT/SMC)
 
+v3.1 — Educational images + generate_lesson_images ingestion:
+- generate_lesson_images.py: auto-generates 8 ICT/SMC matplotlib diagrams
+- Diagrams: FVG, Order Block, BOS/CHoCH, Liquidity, Market Structure,
+  Premium/Discount, Inducement, AMD — dark theme (#131722)
+- Uploaded to Supabase Storage bucket "lesson-images"
+- /example [CONCEPT] → returns static diagram or live chart with focus annotation
+- /chart SYMBOL TF [CONCEPT] → focus_concept injected into ChartAnnotator prompt
+
+v3.0 — /example command + focus_concept in chart annotation:
+- handle_example: fetches lesson_images table → reply_photo
+- ChartAnnotator: focus_concept → targeted ICT analysis prompt
+- lesson_images table + Supabase Storage bucket created
+- get_lesson_image() in LessonManager — topic/concept_type ILIKE lookup
+
+v2.7 — RAG level-aware semantic search:
+- RAGSearch full rewrite: pgvector (match_knowledge_documents RPC) + keyword fallback
+- Level filter: _levels_up_to(level) → difficulty_level IN (allowed_levels)
+- openai>=1.0.0 added to requirements.txt
+- quiz_results and lesson_requests tables wired into handlers
+- _save_lesson_request() and _save_quiz_result() helpers
+
 v2.5 — Live charts + Education system:
 - ChartGenerator: live OHLCV charts via yfinance + mplfinance (dark theme)
 - /chart SYMBOL TF → generates live chart + ICT/SMC annotation
 - LessonManager: /lesson /quiz /progress structured ICT/SMC curriculum
 - /quiz → native Telegram QUIZ polls (auto-checks answer + explanation)
 - /watch → user watchlist + TradingView webhook alert integration
-- send_alert_chart() → proactive annotated chart when TV alert fires
 
 v2.4 — Persistent student memory:
 - UserMemory: per-user portrait stored in Supabase (user_memory table)
@@ -123,7 +143,7 @@ class JarvisBot:
 
     def run(self):
         """Start bot polling."""
-        print("🤖 JARVIS Bot v3.0 starting...")
+        print("🤖 JARVIS Bot v3.1 starting...")
         print("   ├─ Claude:   Sonnet (vision/chart), Haiku (memory updates)")
         print("   ├─ Charts:   ChartGenerator (yfinance+mplfinance) + ChartAnnotator (Sonnet)")
         print("   ├─ Lessons:  LessonManager 51 topics (/lesson /quiz /progress /profile)")

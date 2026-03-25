@@ -1,6 +1,6 @@
 # JARVIS Bot — Architecture & Paths Reference
 > Единый источник правды. Обновляй при любых изменениях структуры.
-> Last updated: 2026-03-25 (v2.7)
+> Last updated: 2026-03-25 (v3.1)
 
 ---
 
@@ -51,6 +51,7 @@ src/bot/
 src/ingestion/
   add_structured_content.py  - Добавление доков в KB (индикаторы/модели/системы)
   re_embed_missing.py        - Генерация эмбеддингов для docs без векторов
+  generate_lesson_images.py  - Генерация 8 ICT/SMC диаграмм → Supabase Storage
 
 system/prompts/mentor.md   - Системный промпт JARVIS-ментора
 tests/unit/                - Юнит-тесты
@@ -63,15 +64,21 @@ supabase/migrations/       - SQL миграции БД
 
 | Таблица | Назначение |
 |---------|-----------|
-| knowledge_documents | База знаний (220 docs), embedding vector(1536), difficulty_level |
+| knowledge_documents | База знаний (238 docs), embedding vector(1536), difficulty_level |
 | bot_users | Пользователи Telegram, уровень, статистика |
 | user_memory | JSONB-портрет каждого ученика (XP, бейджи, темы, уровень) |
 | conversations | История диалогов (последние 20 сообщений на пользователя) |
 | user_watchlist | Тикеры в вотч-листе |
 | quiz_results | Результаты финальных тестов уровня |
 | lesson_requests | Лог выданных уроков и квизов |
+| lesson_images | topic → image_url (PNG в Supabase Storage) + caption, level, concept_type |
 
 Индекс: HNSW на embedding (m=16, ef_construction=64)
+
+Supabase Storage:
+  Bucket: lesson-images (public, 5MB limit, image/*)
+  Path:   concepts/{concept}.png
+  Access: public read, service_role insert
 
 ---
 
@@ -121,6 +128,22 @@ XP: /lesson +50 | /quiz +100 | /levelup +500
 
 ## 📝 Ingestion (запускать на iMac)
 
-  python -m src.ingestion.add_structured_content   # добавить контент в KB
-  python -m src.ingestion.re_embed_missing          # сгенерировать эмбеддинги
-  python scripts/analyze_kb.py                      # анализ KB
+  python -m src.ingestion.add_structured_content    # добавить контент в KB
+  python -m src.ingestion.re_embed_missing           # сгенерировать эмбеддинги
+  python -m src.ingestion.generate_lesson_images     # сгенерировать/загрузить диаграммы
+  python scripts/analyze_kb.py                       # анализ KB
+
+---
+
+## 📦 Версии
+
+| Версия | Дата | Ключевые изменения |
+|--------|------|-------------------|
+| v3.1 | 2026-03-25 | generate_lesson_images.py: 8 ICT/SMC диаграмм → Supabase Storage |
+| v3.0 | 2026-03-25 | /example команда, lesson_images таблица, focus_concept в ChartAnnotator |
+| v2.7 | 2026-03-24 | RAG level-aware (pgvector), quiz_results/lesson_requests в БД |
+| v2.6 | 2026-03-24 | Rate limiting, branch cleanup, sync-macbook.yml fix |
+| v2.5 | 2026-03-23 | Live charts (yfinance), LessonManager, /quiz Telegram polls |
+| v2.4 | 2026-03-22 | UserMemory — персистентный портрет ученика |
+| v2.3 | 2026-03-21 | ChartAnnotator + ChartDrawer (Sonnet vision) |
+| v2.2 | 2026-03-20 | Single ClaudeClient, CostManager |
